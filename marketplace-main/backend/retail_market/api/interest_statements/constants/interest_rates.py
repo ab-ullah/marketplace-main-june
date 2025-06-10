@@ -1,0 +1,16 @@
+INTEREST_RATE_BY_YEAR = {
+    2021: 0.0350,
+    2022: 0.0325
+}
+
+CURRENCY_INTEREST_RATE_BY_YEAR = {
+    'EUR': {
+        2021: 0.0185,
+        2022: 0.01775
+    }
+}
+
+CONTEXT_INTEREST_RATES = [
+    (2021, 0.0350),
+    (2022, 0.0325)
+]

@@ -1,0 +1,5 @@
+export const OWNERSHIP_PATH = '/investor/ownership'
+export const HOME_PAGE = '/investor/start'
+export const CARRY_MANAGEMENT = '/investor/carry-plans'
+export const NOTICES_PATH = '/investor/notices'
+export const TOTAL_COMPENSATION_PATH = '/investor/totalCompensation'

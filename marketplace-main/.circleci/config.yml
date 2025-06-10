@@ -1,0 +1,629 @@
+######################################################################################################################
+# APPLICATION CI/CD CONFIGURATION
+#
+# This configures CircleCI to implement a CI/CD pipeline for application code. Refer to the Gruntwork Production
+# Deployment Guide, "How to configure a production-grade CI/CD workflow for infrastructure code"
+# (https://gruntwork.io/guides/automations/how-to-configure-a-production-grade-ci-cd-setup-for-apps-and-infrastructure-code/)
+# for details on how the pipeline is setup.
+#
+# The following pipeline is implemented in this configuration:
+#
+# - For any commit on any branch, build a new docker image using the commit SHA.
+# - For commits to main, deploy the built image to the dev environment.
+# - For release tags, deploy the built image to the stage environment.
+######################################################################################################################
+version: 2.1
+
+# We use the slack orb to implement slack notifications.
+# Note that in order for this to work, we need to specify the oauth token for the bot using SLACK_ACCESS_TOKEN env var on
+# the build.
+# Refer to the official setup documentation for more info: https://github.com/CircleCI-Public/slack-orb/wiki/Setup
+orbs:
+  slack: circleci/slack@4.1.1
+
+# Global constants for the jobs. This includes:
+# - Using machine executor
+# - Tools versions
+marketplace_defaults: &marketplace_api_defaults
+  machine:
+    image: "ubuntu-2004:2024.01.1"
+  environment:
+    REGION: us-west-2
+    GRUNTWORK_INSTALLER_VERSION: v0.0.36
+    MODULE_CI_VERSION: v0.38.9
+    MODULE_SECURITY_VERSION: v0.55.0
+    DEV_DEPLOY_PATH: "dev/us-west-2/dev/services/marketplace-api"
+    STAGE_DEPLOY_PATH: "stage/us-west-2/stage/services/marketplace-api"
+    IMAGE_TAG_VARNAME: "tag"
+  resource_class: large
+
+investor_defaults: &investor_dashboard_defaults
+  machine:
+    image: "ubuntu-2004:2024.01.1"
+  environment:
+    REGION: us-west-2
+    GRUNTWORK_INSTALLER_VERSION: v0.0.36
+    MODULE_CI_VERSION: v0.38.9
+    MODULE_SECURITY_VERSION: v0.55.0
+    DEV_DEPLOY_PATH: "dev/us-west-2/dev/services/investor-dashboard"
+    STAGE_DEPLOY_PATH: "stage/us-west-2/stage/services/investor-dashboard"
+    IMAGE_TAG_VARNAME: "tag"
+  resource_class: large
+
+sidecar_admin_defaults: &sidecar_admin_defaults
+  machine:
+    image: "ubuntu-2004:2024.01.1"
+  environment:
+    REGION: us-west-2
+    GRUNTWORK_INSTALLER_VERSION: v0.0.36
+    MODULE_CI_VERSION: v0.38.9
+    MODULE_SECURITY_VERSION: v0.55.0
+    DEV_DEPLOY_PATH: "dev/us-west-2/dev/services/sidecar-admin"
+    STAGE_DEPLOY_PATH: "stage/us-west-2/stage/services/sidecar-admin"
+    IMAGE_TAG_VARNAME: "tag"
+  resource_class: large
+
+public_marketplace_frontend_defaults: &public_marketplace_frontend_defaults
+  machine:
+    image: "ubuntu-2004:2024.01.1"
+  environment:
+    REGION: us-west-2
+    GRUNTWORK_INSTALLER_VERSION: v0.0.36
+    MODULE_CI_VERSION: v0.38.9
+    MODULE_SECURITY_VERSION: v0.55.0
+    DEV_DEPLOY_PATH: "dev/us-west-2/dev/services/public-marketplace-frontend"
+    STAGE_DEPLOY_PATH: "stage/us-west-2/stage/services/public-marketplace-frontend"
+    IMAGE_TAG_VARNAME: "tag"
+
+jobs:
+  deploy_branch_server_api:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Deploy API to EC2
+          command: |
+            ssh -o StrictHostKeyChecking=no ubuntu@3.15.42.182 "\
+              source venv/bin/activate && \
+              cd /home/ubuntu/marketplace/backend/retail_market && \
+              git fetch --all --tags && \
+              git checkout tags/$CIRCLE_TAG -b tag-branch-$CIRCLE_TAG && \
+              pip install -r requirements.txt && \
+              python manage.py migrate && \
+              python manage.py setup_db && \
+              sudo systemctl restart gunicorn
+            "
+  deploy_branch_server_investor_dashboard:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Deploy Investor dashboard to EC2
+          command: |
+            ssh -o StrictHostKeyChecking=no ubuntu@18.221.243.132 "\
+              cd /home/ubuntu/marketplace/frontend/sidecar-investor && \
+              git fetch --all --tags && \
+              git checkout tags/$CIRCLE_TAG -b tag-branch-$CIRCLE_TAG && \
+              yarn install && \
+              yarn build && \
+              sudo systemctl restart nginx
+            "
+
+  deploy_branch_server_admin_dashboard:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Deploy to EC2
+          command: |
+            ssh -o StrictHostKeyChecking=no ubuntu@3.128.186.203 "\
+              cd /home/ubuntu/marketplace/frontend/sidecar-admin && \
+              git fetch --all --tags && \
+              git checkout tags/$CIRCLE_TAG -b tag-branch-$CIRCLE_TAG && \
+              yarn install && \
+              yarn build && \
+              sudo systemctl restart nginx
+            "
+
+  testsuite_smoke_testrail:
+    working_directory: ~/circleci-marketplace-api
+    resource_class: large
+    docker:
+      - image: cypress/included:10.6.0
+        user: root
+        environment:
+          TERM: xterm
+      - image: cimg/postgres:13.3
+        environment:
+          POSTGRES_USER: citest
+          POSTGRES_DB: citest
+          POSTGRES_PASSWORD: citest
+      - image: localstack/localstack
+      - image: cimg/redis:6.2
+    steps:
+      - checkout
+      - run:
+          name: Running Smoke tests
+          command: |
+            cd frontend
+            npm i
+            CYPRESS_TESTRAIL_REPORTER_USERNAME=$TESTRAIL_REPORTING_USER CYPRESS_TESTRAIL_REPORTER_PASSWORD=$TESTRAIL_REPORTING_PASSWORD CIRCLE_BUILD_ID=$CIRCLE_SHA1 CYPRESS_USERNAME=$CYPRESS_USERNAME CYPRESS_PASSWORD=$CYPRESS_PASSWORD npm run cy:adminSmokeTestRail || true
+      - store_test_results:
+          path: multiple-results
+      - store_artifacts:
+          path: /root/circleci-marketplace-api/frontend/cypress/videos
+      - store_artifacts:
+          path: /root/circleci-marketplace-api/frontend/cypress/screenshots
+
+  testsuite_investorSmokeTests:
+    working_directory: ~/circleci-marketplace-api
+    resource_class: large
+    docker:
+      - image: cypress/included:10.6.0
+        user: root
+        environment:
+          TERM: xterm
+      - image: cimg/postgres:13.3
+        environment:
+          POSTGRES_USER: citest
+          POSTGRES_DB: citest
+          POSTGRES_PASSWORD: citest
+      - image: localstack/localstack
+      - image: cimg/redis:6.2
+    steps:
+      - checkout
+      - run:
+          name: Running Smoke tests
+          command: |
+            cd frontend
+            npm i
+            CYPRESS_TESTRAIL_REPORTER_USERNAME=$TESTRAIL_REPORTING_USER CYPRESS_TESTRAIL_REPORTER_PASSWORD=$TESTRAIL_REPORTING_PASSWORD CIRCLE_BUILD_ID=$CIRCLE_SHA1 CYPRESS_USERNAME=$CYPRESS_USERNAME CYPRESS_PASSWORD=$CYPRESS_PASSWORD npm run cy:investorSmoke || true
+      - store_test_results:
+          path: multiple-results
+      - store_artifacts:
+          path: /root/circleci-marketplace-api/frontend/cypress/videos
+      - store_artifacts:
+          path: /root/circleci-marketplace-api/frontend/cypress/screenshots
+
+  testsuite_preDev_admin:
+    working_directory: ~/circleci-marketplace-api
+    resource_class: large
+    docker:
+      - image: cypress/included:10.6.0
+        user: root
+        environment:
+          TERM: xterm
+      - image: cimg/postgres:13.3
+        environment:
+          POSTGRES_USER: citest
+          POSTGRES_DB: citest
+          POSTGRES_PASSWORD: citest
+      - image: localstack/localstack
+      - image: cimg/redis:6.2
+    steps:
+      - checkout
+      - run:
+          name: Running Smoke tests
+          command: |
+            cd frontend
+            npm i
+            CYPRESS_TESTRAIL_REPORTER_USERNAME=$TESTRAIL_REPORTING_USER CYPRESS_TESTRAIL_REPORTER_PASSWORD=$TESTRAIL_REPORTING_PASSWORD CIRCLE_BUILD_ID=$CIRCLE_SHA1 CYPRESS_USERNAME=$CYPRESS_USERNAME CYPRESS_PASSWORD=$CYPRESS_PASSWORD npm run cy:adminPreDev || true
+      - store_test_results:
+          path: multiple-results
+      - store_artifacts:
+          path: /root/circleci-marketplace-api/frontend/cypress/videos
+      - store_artifacts:
+          path: /root/circleci-marketplace-api/frontend/cypress/screenshots
+
+  testsuite_preDev_investor:
+    working_directory: ~/circleci-marketplace-api
+    docker:
+      - image: cypress/included:10.6.0
+        user: root
+        environment:
+          TERM: xterm
+      - image: cimg/postgres:13.3
+        environment:
+          POSTGRES_USER: citest
+          POSTGRES_DB: citest
+          POSTGRES_PASSWORD: citest
+      - image: localstack/localstack
+      - image: cimg/redis:6.2
+    steps:
+      - checkout
+      - run:
+          name: Running Smoke tests
+          command: |
+            cd frontend
+            npm i
+            CYPRESS_TESTRAIL_REPORTER_USERNAME=$TESTRAIL_REPORTING_USER CYPRESS_TESTRAIL_REPORTER_PASSWORD=$TESTRAIL_REPORTING_PASSWORD CIRCLE_BUILD_ID=$CIRCLE_SHA1 CYPRESS_USERNAME=$CYPRESS_USERNAME CYPRESS_PASSWORD=$CYPRESS_PASSWORD npm run cy:investorPreDev || true
+      - store_test_results:
+          path: multiple-results
+      - store_artifacts:
+          path: /root/circleci-marketplace-api/frontend/cypress/videos
+      - store_artifacts:
+          path: /root/circleci-marketplace-api/frontend/cypress/screenshots
+  
+  testsuite_custom_smart_blocks:
+    working_directory: ~/circleci-marketplace-api
+    docker:
+      - image: cypress/included:10.6.0
+        user: root
+        environment:
+          TERM: xterm
+      - image: cimg/postgres:13.3
+        environment:
+          POSTGRES_USER: citest
+          POSTGRES_DB: citest
+          POSTGRES_PASSWORD: citest
+      - image: localstack/localstack
+      - image: cimg/redis:6.2
+    steps:
+      - checkout
+      - run:
+          name: Running Smoke tests
+          command: |
+            cd frontend
+            npm i
+            CYPRESS_TESTRAIL_REPORTER_USERNAME=$TESTRAIL_REPORTING_USER CYPRESS_TESTRAIL_REPORTER_PASSWORD=$TESTRAIL_REPORTING_PASSWORD CIRCLE_BUILD_ID=$CIRCLE_SHA1 CYPRESS_USERNAME=$CYPRESS_USERNAME CYPRESS_PASSWORD=$CYPRESS_PASSWORD npm run cy:admincustomblocks || true
+      - store_test_results:
+          path: multiple-results
+      - store_artifacts:
+          path: /root/circleci-marketplace-api/frontend/cypress/videos
+      - store_artifacts:
+          path: /root/circleci-marketplace-api/frontend/cypress/screenshots
+  
+  test_marketplace_api:
+    working_directory: ~/circleci-marketplace-api
+    docker:
+      - image: cimg/python:3.9
+        user: root
+        environment:
+          AWS_DOCUMENT_BUCKET: sidecar-documents
+          AWS_DEFAULT_REGION: us-west-2
+      - image: cimg/postgres:13.3
+        environment:
+          POSTGRES_USER: citest
+          POSTGRES_DB: citest
+          POSTGRES_PASSWORD: citest
+      - image: localstack/localstack:1.2.0
+        environment:
+          LS_LOG: debug
+      - image: cimg/redis:6.2
+    parallelism: 2
+    resource_class: large
+    steps:
+      - checkout
+      - run:
+          name: installing CI tools
+          command: |
+            rm /etc/apt/sources.list.d/github_git-lfs.list
+            apt-get update
+            apt-get install jq
+            apt-get install libpango-1.0-0
+            apt-get install pangoft2-1.0-0
+            pip install awscli==1.32.24
+            pip install awscli-local
+            cd backend/retail_market
+            pip install -r requirements.local.txt
+      - run:
+          name: Running Backend Tests
+          command: |
+            export AWS_DOCUMENT_BUCKET=ci-us-documents
+            export AWS_DEFAULT_REGION=us-west-2
+            export AWS_PUBLIC_ASSETS_BUCKET=ci-us-assets
+            export AWS_PUBLIC_ASSETS_CLOUDFRONT_DOMAIN=ci-us-assets.s3.localhost.localstack.cloud:4566
+            cd backend/retail_market
+            mv .env.ci .env
+            awslocal kms create-key --region $AWS_DEFAULT_REGION
+            echo AWS_DOCUMENT_KMS_KEY_ID=`awslocal kms list-keys | jq ."Keys"[0]."KeyId"` >> .env
+            awslocal s3api create-bucket --bucket $AWS_DOCUMENT_BUCKET --region $AWS_DEFAULT_REGION --create-bucket-configuration LocationConstraint=$AWS_DEFAULT_REGION
+            awslocal s3api create-bucket --bucket $AWS_PUBLIC_ASSETS_BUCKET --region $AWS_DEFAULT_REGION --create-bucket-configuration LocationConstraint=$AWS_DEFAULT_REGION
+            
+            python manage.py test --parallel=2 --settings=config.settings.tests `circleci tests glob "**/test_*.py" "**/*test.py" | circleci tests split --split-by=timings | tr "/" "." | sed 's/\.py$//g' `
+
+  build_investor_dashboard:
+    <<: *investor_dashboard_defaults
+    steps:
+      - checkout
+      - run:
+          name: install utilities
+          command: ./frontend/_ci/scripts/install.sh
+      - run:
+          name: build docker image
+          command: ./frontend/_ci/scripts/build-docker-image.sh "$REGION" "$CIRCLE_SHA1" "$CIRCLE_SHA1"
+  
+  deploy_dev_investor_dashboard:
+    <<: *investor_dashboard_defaults
+    steps:
+      - checkout
+      - run:
+          name: install utilities
+          command: ./frontend/_ci/scripts/install.sh
+      - run:
+          name: deploy docker image to dev environment
+          command: ./frontend/_ci/scripts/deploy-docker-image.sh "$REGION" "$CIRCLE_SHA1" "$DEV_DEPLOY_PATH" "$IMAGE_TAG_VARNAME"
+
+  deploy_stage_investor_dashboard:
+    <<: *investor_dashboard_defaults
+    steps:
+      - checkout
+      - run:
+          name: install utilities
+          command: ./frontend/_ci/scripts/install.sh
+      - run:
+          name: deploy docker image to stage environment
+          command: ./frontend/_ci/scripts/deploy-docker-image.sh "$REGION" "$CIRCLE_SHA1" "$STAGE_DEPLOY_PATH" "$IMAGE_TAG_VARNAME"
+
+  build_marketplace_api:
+    <<: *marketplace_api_defaults
+    steps:
+      - checkout
+      - run:
+          name: install utilities
+          command: ./backend/_ci/scripts/install.sh
+      - run:
+          name: build docker image
+          command: ./backend/_ci/scripts/build-docker-image.sh "$REGION" "$CIRCLE_SHA1" "$CIRCLE_SHA1"
+
+  deploy_dev_marketplace_api:
+    <<: *marketplace_api_defaults
+    steps:
+      - checkout
+      - run:
+          name: install utilities
+          command: ./backend/_ci/scripts/install.sh
+      - run:
+          name: deploy docker image to dev environment
+          command: ./backend/_ci/scripts/deploy-docker-image.sh "$REGION" "$CIRCLE_SHA1" "$DEV_DEPLOY_PATH" "$IMAGE_TAG_VARNAME"
+
+  deploy_stage_marketplace_api:
+    <<: *marketplace_api_defaults
+    steps:
+      - checkout
+      - run:
+          name: install utilities
+          command: ./backend/_ci/scripts/install.sh
+      - run:
+          name: deploy docker image to stage environment
+          command: ./backend/_ci/scripts/deploy-docker-image.sh "$REGION" "$CIRCLE_SHA1" "$STAGE_DEPLOY_PATH" "$IMAGE_TAG_VARNAME"
+
+  build_sidecar_admin:
+    <<: *sidecar_admin_defaults
+    steps:
+      - checkout
+      - run:
+          name: install utilities
+          command: ./frontend/sidecar-admin/_ci/scripts/install.sh
+      - run:
+          name: build docker image
+          command: ./frontend/sidecar-admin/_ci/scripts/build-docker-image.sh "$REGION" "$CIRCLE_SHA1" "$CIRCLE_SHA1"
+  
+  deploy_dev_sidecar_admin:
+    <<: *sidecar_admin_defaults
+    steps:
+      - checkout
+      - run:
+          name: install utilities
+          command: ./frontend/sidecar-admin/_ci/scripts/install.sh
+      - run:
+          name: deploy docker image to dev environment
+          command: ./frontend/sidecar-admin/_ci/scripts/deploy-docker-image.sh "$REGION" "$CIRCLE_SHA1" "$DEV_DEPLOY_PATH" "$IMAGE_TAG_VARNAME"
+
+  deploy_stage_sidecar_admin:
+    <<: *sidecar_admin_defaults
+    steps:
+      - checkout
+      - run:
+          name: install utilities
+          command: ./frontend/sidecar-admin/_ci/scripts/install.sh
+      - run:
+          name: deploy docker image to stage environment
+          command: ./frontend/sidecar-admin/_ci/scripts/deploy-docker-image.sh "$REGION" "$CIRCLE_SHA1" "$STAGE_DEPLOY_PATH" "$IMAGE_TAG_VARNAME"
+  
+  build_public_marketplace_frontend:
+    <<: *public_marketplace_frontend_defaults
+    steps:
+      - checkout
+      - run:
+          name: install utilities
+          command: ./frontend/public-marketplace/_ci/scripts/install.sh
+      - run:
+          name: build docker image
+          command: ./frontend/public-marketplace/_ci/scripts/build-docker-image.sh "$REGION" "$CIRCLE_SHA1" "$CIRCLE_SHA1"
+  
+  deploy_dev_public_marketplace_frontend:
+    <<: *public_marketplace_frontend_defaults
+    steps:
+      - checkout
+      - run:
+          name: install utilities
+          command: ./frontend/public-marketplace/_ci/scripts/install.sh
+      - run:
+          name: deploy docker image to dev environment
+          command: ./frontend/public-marketplace/_ci/scripts/deploy-docker-image.sh "$REGION" "$CIRCLE_SHA1" "$DEV_DEPLOY_PATH" "$IMAGE_TAG_VARNAME"
+
+  deploy_stage_public_marketplace_frontend:
+    <<: *public_marketplace_frontend_defaults
+    steps:
+      - checkout
+      - run:
+          name: install utilities
+          command: ./frontend/public-marketplace/_ci/scripts/install.sh
+      - run:
+          name: deploy docker image to stage environment
+          command: ./frontend/public-marketplace/_ci/scripts/deploy-docker-image.sh "$REGION" "$CIRCLE_SHA1" "$STAGE_DEPLOY_PATH" "$IMAGE_TAG_VARNAME"
+
+
+
+workflows:
+  # Workflow: always build images, and then deploy image to dev on all commits to main, and deploy image to stage on
+  # all tags that start with `v`.
+
+  continuous-deploy:
+    jobs:
+      - deploy_branch_server_api:
+          filters:
+            tags:
+              only: /^branch-server.*/
+            branches:
+              ignore: /.*/
+
+      - deploy_branch_server_investor_dashboard:
+          filters:
+            tags:
+              only: /^branch-server.*/
+            branches:
+              ignore: /.*/
+
+      - deploy_branch_server_admin_dashboard:
+          filters:
+            tags:
+              only: /^branch-server.*/
+            branches:
+              ignore: /.*/
+
+      - test_marketplace_api:
+          context:
+            - sidecar-shared
+          filters:
+            tags:
+              only:
+              - /^v.*/
+              - /^build.*/
+      - build_marketplace_api:
+          context:
+            - sidecar-shared
+          requires:
+            - test_marketplace_api
+          filters:
+            branches:
+              only:
+                - main
+                - production
+            tags:
+              only:
+                - /^v.*/
+                - /^build.*/
+      - deploy_dev_marketplace_api:
+          context:
+            - sidecar-shared
+          requires:
+            - build_marketplace_api
+          filters:
+            branches:
+              only: main
+            # NOTE: tag filter is purposefully not added here. CircleCI does not build on tags automatically, so by
+            # omitting the tag filter, tags will skip this build step.
+      - deploy_stage_marketplace_api:
+          context:
+            - sidecar-shared
+          requires:
+            - build_marketplace_api
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+      - build_investor_dashboard:
+          context:
+            - sidecar-shared
+          requires:
+            - test_marketplace_api
+          filters:
+            branches:
+              only:
+              - main
+              - production
+            tags:
+              only:
+              - /^v.*/
+              - /^build.*/
+      - deploy_dev_investor_dashboard:
+          context:
+            - sidecar-shared
+          requires:
+            - build_investor_dashboard
+          filters:
+            branches:
+              only: main
+            # NOTE: tag filter is purposefully not added here. CircleCI does not build on tags automatically, so by
+            # omitting the tag filter, tags will skip this build step.
+      - deploy_stage_investor_dashboard:
+          context:
+            - sidecar-shared
+          requires:
+            - build_investor_dashboard
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+      - build_sidecar_admin:
+          context:
+            - sidecar-shared
+          requires:
+            - test_marketplace_api
+          filters:
+            branches:
+              only:
+              - main
+              - production
+            tags:
+              only:
+              - /^v.*/
+              - /^build.*/
+      - deploy_dev_sidecar_admin:
+          context:
+            - sidecar-shared
+          requires:
+            - build_sidecar_admin
+          filters:
+            branches:
+              only: main
+            # NOTE: tag filter is purposefully not added here. CircleCI does not build on tags automatically, so by
+            # omitting the tag filter, tags will skip this build step.
+      - deploy_stage_sidecar_admin:
+          context:
+            - sidecar-shared
+          requires:
+            - build_sidecar_admin
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+      - build_public_marketplace_frontend:
+          context:
+            - sidecar-shared
+          requires:
+            - test_marketplace_api
+          filters:
+            branches:
+              only:
+              - main
+              - production
+            tags:
+              only:
+              - /^v.*/
+              - /^build.*/
+      - deploy_dev_public_marketplace_frontend:
+          context:
+            - sidecar-shared
+          requires:
+            - build_public_marketplace_frontend
+          filters:
+            branches:
+              only: main
+            # NOTE: tag filter is purposefully not added here. CircleCI does not build on tags automatically, so by
+            # omitting the tag filter, tags will skip this build step.
+      - deploy_stage_public_marketplace_frontend:
+          context:
+            - sidecar-shared
+          requires:
+            - build_public_marketplace_frontend
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/

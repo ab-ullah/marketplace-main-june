@@ -1,0 +1,4 @@
+.env
+Dockerfile
+build/
+node_modules/

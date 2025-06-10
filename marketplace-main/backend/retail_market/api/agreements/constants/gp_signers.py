@@ -1,0 +1,2 @@
+GP_SIGNER_NAME = 'gp-signers'
+GP_SIGNER_CLIENT_ID = 123456

@@ -1,0 +1,152 @@
+body {
+  font-family: "Quicksand", sans-serif;
+  font-size: 14px;
+  color: #091626;
+  margin: -35px;
+}
+
+table {
+  border-spacing: 0;
+  width: 100%;
+  border-radius: 7px;
+  border: 0.5px solid #ddd;
+}
+
+section {
+  break-inside: avoid;
+}
+
+.header-info {
+  vertical-align: text-top;
+  text-align: left;
+}
+
+.header-title {
+  width: 380px;
+}
+
+.content {
+  color: #65828d;
+  width: 150px;
+  font-size: 10px;
+  line-height: 12.5px;
+}
+
+.address {
+  padding-top: 17px;
+}
+
+.row-header {
+  vertical-align: text-top;
+  display: flex;
+  justify-content: space-between;
+  padding-top: 5px;
+}
+
+.title {
+  font-size: 24px;
+  line-height: 25px;
+  font-family: "Inter", sans-serif !important;
+}
+
+.text {
+  font-size: 11px;
+  line-height: 13.75px;
+}
+
+.subheading {
+  color: #ffffff;
+  background-color: #607d8b;
+  width: auto;
+  float: left;
+  padding: 10px 30px 10px 50px;
+  font-size: 12px;
+  border-radius: 0px 33px 33px 0px;
+  margin-left: -52px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 13px;
+}
+
+.row-name {
+  float: left;
+  width: 13%;
+  font-size: 9px;
+}
+
+.row-value {
+  float: left;
+  width: 87%;
+  font-size: 9px;
+}
+
+.total {
+  background-color: #f9f9fe;
+}
+
+.total-title {
+  text-align: left;
+  padding-left: 30px;
+}
+
+.total-amount {
+  font-weight: 700 !important;
+  text-align: center;
+  width: 100px;
+}
+
+th {
+  background-color: #3a355c;
+  color: white;
+  font-size: 8px;
+  vertical-align: text-top;
+  text-align: center;
+  padding: 8px;
+}
+
+th:first-child,
+tr:nth-child(1) td:first-child {
+  border-radius: 7px 0 0 0;
+}
+
+th:last-child,
+tr:nth-child(1) td:last-child {
+  border-radius: 0 7px 0 0;
+}
+
+tr:nth-last-child(1) td:first-child {
+  border-radius: 0 0 0 7px;
+}
+
+tr:nth-last-child(1) td:last-child {
+  border-radius: 0 0 7px 0;
+}
+
+td {
+  font-size: 9px;
+  text-align: center;
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+}
+
+tr:nth-last-child(1) td {
+  border-bottom: none;
+}
+
+.line-break {
+  width: 100%;
+  border-top: 0.5px solid #c1cee9;
+}
+
+.footer {
+  position: fixed;
+  bottom: -40px;
+  width: 100%;
+  text-align: center;
+  width: 100%;
+  display: inline;
+  padding-left: 35px;
+}

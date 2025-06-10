@@ -1,0 +1,1 @@
+FIRST_COMPANY_NAME = 'sidecar'

@@ -1,0 +1,40 @@
+import {ICurrency} from "./currency";
+
+export interface IFundInvestorDetail {
+  id: number;
+  investor: number;
+  fund: number;
+  purchase_price: number;
+  total_distributions: number;
+  pending_distributions: number;
+  leverage_used: number;
+  order: number | null;
+  current_net_equity: number;
+  loan_balance_with_unpaid_interest: number;
+  nav_share: number;
+  remaining_equity: number;
+  unrealized_gain: number;
+  leveraged_irr: number;
+  un_leveraged_irr: number;
+  investor_name: string;
+  fund_name: string;
+  currency: ICurrency;
+  years_invested: number;
+  unpaid_interest: number;
+  equity_remaining: number;
+  initial_leverage_ratio: number;
+  current_leverage_ratio: number;
+  commitment_to_date: number;
+  uncalled_amount: number;
+  current_interest_rate: number;
+  interest_accrued: number;
+  interest_paid: number;
+  equity_commitment: number;
+  equity_called: number;
+  fund_ownership_percent: number;
+  percent_of_account: number;
+  capital_calls_since_last_nav: number;
+  distributions_calls_since_last_nav: number;
+  fund_nav_date: string;
+  created_at: string;
+}

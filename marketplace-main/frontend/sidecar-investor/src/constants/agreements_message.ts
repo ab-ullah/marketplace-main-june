@@ -1,0 +1,1 @@
+export const AGREEMENTS_STEP_MESSAGE = 'Thank you. Please continue to the next step to sign your subscription documents.'

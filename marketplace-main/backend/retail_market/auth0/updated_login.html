@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Sign In with Auth0</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    .auth0-lock-header-logo {
+      display: none !important;
+    }
+
+    .auth0-lock.auth0-lock .auth0-lock-header-bg {
+      background: #FFF !important;
+    }
+  </style>
+</head>
+<body>
+
+<!--[if IE 8]>
+<script src="//cdnjs.cloudflare.com/ajax/libs/ie8/0.2.5/ie8.js"></script>
+<![endif]-->
+
+<!--[if lte IE 9]>
+<script src="https://cdn.auth0.com/js/base64.js"></script>
+<script src="https://cdn.auth0.com/js/es5-shim.min.js"></script>
+<![endif]-->
+
+<script src="https://cdn.auth0.com/js/lock/11.30/lock.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+<script src="https://cdn.auth0.com/js/auth0/9.11/auth0.min.js"></script>
+<script src="https://cdn.auth0.com/js/polyfills/1.0/object-assign.min.js"></script>
+<script>
+    // Decode utf8 characters properly
+    var config = JSON.parse(decodeURIComponent(escape(window.atob('@@config@@'))));
+    config.extraParams = config.extraParams || {};
+    var connection = config.connection;
+    var prompt = config.prompt;
+    var languageDictionary;
+    var language;
+    var colors = config.colors || {};
+
+    const AUTHORIZED_DOMAINS = ['vistra.com', 'jll.com', 'lasalle.com', 'ap.jll.com', 'eu.jll.com', 'am.jll.com']; //authorized domains
+    const VISTRA_DOMAINS = ['vistra.com']
+    const CURRENT_EMAILS = {
+    "jennif102@gmail.com": true,
+    "leonard@horizon3.net": true,
+    "marchenko.alexan@gmail.com": true,
+    "mathieu@lazertechnologies.com": true,
+    "ronnie@horizon3.net": true,
+    "test@test.com": true,
+    "helene@ely.place": true,
+    "omairshamshir91@gmail.com": true,
+    "benjamin.twidle@walkersglobal.com": true,
+    "brian.catiis@pgim.com": true,
+    "cajparker56@gmail.com": true,
+    "christine.tarantino@prudential.com": true,
+    "cristina.hazday@pgim.com": true,
+    "daniel@ely.place": true,
+    "dennis.martin@pgim.com": true,
+    "edward.reed@pgim.com": true,
+    "francois@ely.place": true,
+    "gareth@prospectlp.com": true,
+    "hani.farag@pgim.com": true,
+    "jeffajacobson@outlook.com": true,
+    "jeffrey.gnoinski@pgim.com": true,
+    "jennifer.kerper@prudential.com": true,
+    "jim_hutch@yahoo.com": true,
+    "lisa.mohler@pgim.com": true,
+    "meghan.lakeland@pgim.com": true,
+    "pamela.luzzi@pgim.com": true,
+    "patrick.caughey@prudential.com": true,
+    "sean.morris@pgim.com": true,
+    "sven.birlenberg@pgim.com": true,
+    "alice.lin@lasalle.com": true
+		}
+
+    if (config.dict && config.dict.signin && config.dict.signin.title) {
+        languageDictionary = {title: ''};
+    } else if (typeof config.dict === 'string') {
+        language = config.dict;
+    }
+    var loginHint = config.extraParams.login_hint;
+
+    var lock = new Auth0LockPasswordless(config.clientID, config.auth0Domain, {
+        auth: {
+            redirectUrl: config.callbackURL,
+            responseType: (config.internalOptions || {}).response_type ||
+                (config.callbackOnLocationHash ? 'token' : 'code'),
+            params: config.internalOptions
+        },
+        configurationBaseUrl: config.clientConfigurationBaseUrl,
+        overrides: {
+            __tenant: config.auth0Tenant,
+            __token_issuer: config.authorizationServer.issuer
+        },
+        assetsUrl: config.assetsUrl,
+        allowedConnections: connection ? [connection] : null,
+        rememberLastLogin: !prompt,
+        language: language,
+        languageBaseUrl: config.languageBaseUrl,
+        languageDictionary: languageDictionary,
+        passwordlessMethod: "link",
+        theme: {
+            logo: 'https://horizon-test-cdn.s3.us-east-2.amazonaws.com/logo.svg',
+            primaryColor: colors.primary ? colors.primary : 'green'
+        },
+        closable: false
+    });
+
+    var params = Object.assign({
+        /* additional configuration needed for use of custom domains
+        overrides: {
+          __tenant: config.auth0Tenant,
+          __token_issuer: 'YOUR_CUSTOM_DOMAIN'
+        }, */
+        domain: config.auth0Domain,
+        clientID: config.clientID,
+        redirectUri: config.callbackURL,
+        responseType: 'code'
+    }, config.internalOptions);
+
+    var webAuth = new auth0.WebAuth(params);
+
+    lock.show();
+
+    const showDefaultLock = (email) => {
+        lock.hide()
+        const defaultLock = new Auth0Lock(config.clientID, config.auth0Domain, {
+            auth: {
+                redirectUrl: config.callbackURL,
+                responseType: (config.internalOptions || {}).response_type ||
+                    (config.callbackOnLocationHash ? 'token' : 'code'),
+                params: config.internalOptions
+            },
+            configurationBaseUrl: config.clientConfigurationBaseUrl,
+            overrides: {
+                __tenant: config.auth0Tenant,
+                __token_issuer: config.authorizationServer.issuer
+            },
+            assetsUrl: config.assetsUrl,
+            allowedConnections: connection ? [connection] : null,
+            rememberLastLogin: !prompt,
+            language: language,
+            allowSignUp: false,
+            languageBaseUrl: config.languageBaseUrl,
+            languageDictionary: languageDictionary,
+            theme: {
+                logo: 'https://horizon-test-cdn.s3.us-east-2.amazonaws.com/logo.svg',
+                primaryColor: colors.primary ? colors.primary : 'green'
+            },
+            prefill: email ? {email: email} : null,
+            closable: false,
+            defaultADUsernameFromEmailPrefix: false
+        });
+
+        if (colors.page_background) {
+            var css = '.auth0-lock.auth0-lock .auth0-lock-overlay { background: ' +
+                colors.page_background +
+                ' }';
+            var style = document.createElement('style');
+
+            style.appendChild(document.createTextNode(css));
+
+            document.body.appendChild(style);
+        }
+        defaultLock.show()
+    }
+
+    const submitForm = () => {
+        $("button.auth0-lock-submit").attr('type', 'submit');
+        $("button.auth0-lock-submit").off('click');
+        $("button.auth0-lock-submit").click()
+    }
+
+    const isDefaultBehaviourEmail = (rawEmail) => {
+        const parsedEmail = rawEmail.toLowerCase()
+        return !!CURRENT_EMAILS[parsedEmail];
+    }
+
+
+    const onInputUpdate = (e) => {
+        e.preventDefault()
+        const email = $("input[name='email']").val()
+        const valid = $("input[name='email']")[0].checkValidity()
+        if (!valid) {
+            return
+        }
+        const useConnection = AUTHORIZED_DOMAINS.some(
+            function (domain) {
+                const emailSplit = email.split('@');
+                return emailSplit[emailSplit.length - 1].toLowerCase() === domain && emailSplit.length === 2;
+            });
+
+        if (useConnection) {
+            $(".auth0-lock-submit").attr("disabled", true);
+            const emailSplit = email.split('@');
+            const domain = emailSplit[emailSplit.length - 1].toLowerCase()
+            if (domain === 'vistra.com') {
+                webAuth.authorize({
+                    connection: 'Vistra-Non-Prod'
+                }, function (err) {
+                    if (err) alert(err);
+                });
+            } else {
+                webAuth.authorize({
+                    connection: 'jll-okta'
+                }, function (err) {
+                    if (err) alert(err);
+                });
+            }
+        } else if (isDefaultBehaviourEmail(email)) {
+            submitForm()
+        } else {
+            showDefaultLock(email)
+        }
+    }
+
+    const updateButton = () => {
+        const buttonType = $("button.auth0-lock-submit").attr('type')
+        if (buttonType === 'button') return
+        $("button.auth0-lock-submit").attr('type', 'button');
+        $(".auth0-lock-submit").click(onInputUpdate)
+    }
+
+    lock.on("socialOrEmail ready", function (authResult) {
+        updateButton()
+        $("form input").on('keydown', function (e) {
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                e.preventDefault()
+                return false
+            }
+            updateButton()
+        });
+    });
+</script>
+</body>
+</html>

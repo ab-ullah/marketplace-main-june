@@ -1,0 +1,28 @@
+{
+  "scripts": {
+    "cy:run:local": "cypress run",
+    "cy:open:local": "cypress open",
+    "cy:adminPreDev": "cypress run --spec cypress/e2e/preDev/admin/preDevTestsCI.cy.js --config-file=preDev.config.js",
+    "cy:adminSmokeTestRail": "cypress run --spec cypress/e2e/smokeTests/admin/smokeAdmin.cy.js --config-file=adminsmoke.config.js",
+    "cy:investorSmoke": "cypress run --spec cypress/e2e/smokeTests/investor/smokeinvestor.cy.js --config-file=investorsmoke.config.js",
+    "cy:investorPreDevTestRail": "cypress run --env username=$CYPRESS_USERNAME,password=$CYPRESS_PASSWORD --spec cypress/e2e/preDev/investor/tc06_InvestoreOnboardingCorporateEntity.cy.js --config-file=invPreDev.config.js",
+    "cy:investorPreDev": "npx cypress run --spec cypress/e2e/preDev/investor/tc08_preDevCI.cy.js --config-file=invPreDev.config.js",
+    "cy:admincustomblocks": "npx cypress run --spec cypress/e2e/preDev/admin/customBlocksCI.cy.js --config-file=customblock.config.js"
+  },
+  "dependencies": {
+    "cypress": "^10.4.0",
+    "cypress-drag-drop": "^1.1.1",
+    "cypress-xpath": "^2.0.1",
+    "react-lineto": "^3.3.0"
+  },
+  "devDependencies": {
+    "@4tw/cypress-drag-drop": "^2.2.4",
+    "@cypress/xpath": "^2.0.3",
+    "cypress-file-upload": "^5.0.8",
+    "cypress-if": "^1.10.4",
+    "cypress-testrail": "^2.6.0",
+    "cypress-testrail-accumulative-reporter": "^1.1.4",
+    "cypress-testrail-reporter": "^1.3.4",
+    "salty-cypress-testrail-reporter": "^1.4.0"
+  }
+}

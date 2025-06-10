@@ -1,0 +1,384 @@
+{% load static mathfilters %}
+<html lang="en">
+
+<head>
+  <title>Interest Statement</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap" rel="stylesheet">
+  <style>
+
+    body {
+     font-family: "Quicksand", sans-serif;
+      font-size: 14px;
+      color: #091626;
+    }
+
+    .header-info {
+      vertical-align: text-top;
+      text-align: left;
+    }
+
+    .header-title {
+      width: 380px;
+    }
+
+    .header-content {
+      width: 380px;
+    }
+
+    .content {
+      color: #091626;
+      width: 150px;
+      font-size: 11px;
+      line-height: 12.5px;
+    }
+
+    .address {
+      padding-top: 17px;
+    }
+
+    .row-header {
+      vertical-align: text-top;
+      display: flex;
+      justify-content: space-between;
+      padding-top: 5px;
+    }
+
+    .title {
+      font-size: 24px;
+      line-height: 25px;
+      font-family: "Inter";
+      font-style: normal;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      line-height: 16px;
+      font-style: normal;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .account-info {
+      font-size: 11px;
+    }
+
+    .account-info-name {
+      padding-bottom: 13px;
+      float: left;
+      width: 17%;
+    }
+
+    .account-info-value {
+      padding-bottom: 13px;
+      float: left;
+      width: 83%;
+    }
+
+    .text {
+      font-style: normal;
+      font-weight: 500;
+      font-size: 12px;
+      line-height: 14px;
+      letter-spacing: 0.15px;
+      text-align: left;
+    }
+
+    .row {
+      padding-bottom: 13px;
+      display: flex;
+      justify-content: flex-end;
+      font-size: 11px;
+    }
+
+    .row-name {
+      text-align: left;
+      margin-left: auto;
+      width: 180px;
+    }
+
+    .row-value {
+      text-align: right;
+      padding-right: 20px;
+    }
+
+    .short-line-break {
+      width: 20%;
+      border-top: 0.5px solid #091626;
+      float: right;
+    }
+
+    .line-break {
+      width: 100%;
+      border-top: 0.5px solid #c1cee9;
+    }
+
+    .div-break{
+      page-break-before: always;
+      height: 8px;
+    }
+
+    .bank-info {
+      padding-bottom: 13px;
+      font-size: 12px;
+    }
+
+    .bank-info-name {
+      padding-bottom: 13px;
+      float: left;
+      width: 30%;
+    }
+
+    .bank-info-value {
+      padding-bottom: 13px;
+      float: left;
+      width: 70%;
+    }
+
+    .footer {
+      position: fixed;
+      bottom: 0px;
+      width: 100%;
+      text-align: center;
+      width: 100%;
+      display: inline;
+      padding-left: 35px;
+    }
+
+    @page {
+      size: A4;
+      margin: 10mm;
+    }
+
+  </style>
+
+</head>
+<body>
+  <div class="header">
+    <img src="{{company_logo}}" height="20" style="height: 20px"/>
+    <div class="row-header">
+      <div class="header-title">
+        <h1 class="title">{{company_name}}</h1>
+        <br/>
+        <h2 class="subtitle">{{fund_name}}</h2>
+        <h2 class="subtitle">Capital Call Notice</h2>
+      </div>
+      <div class="content address">
+        <div>
+          {{company_address_street1}}<br />
+          {% if company_address_street2 %}
+          {{company_address_street2}}<br />
+          {% endif %}
+          {{company_address_city}}, {{company_address_state}} {{company_address_zipcode}},<br />
+          {{company_address_country}}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <br/>
+
+  <div>
+    <div class="account-info">
+      <div class="account-info-name">Account Name:</div>
+      <div class="account-info-value">{{full_name}}</div>
+    </div>
+    <div class="account-info">
+      <div class="account-info-name">Account ID:</div>
+      <div class="account-info-value">{{partner_id}}</div>
+    </div>
+  </div>
+
+  <br/>
+
+  <div class="text">
+    <br/>{% now "jS F Y" %}<br/><br/>
+    Dear Limited Partner,<br/><br/>
+    This letter constitutes a Capital Call made pursuant to Section [] of the Amended & Restated Limited Partnership Agreement of
+    {{fund_name}} (the "Partnership Agreement"). We are hereby making a Capital Call {{amount|floatformat:"2"}} comprised of the following:
+    <br/><br/><br/>
+  </div>
+
+
+  <div>
+    <div class="row">
+      <div class="row-name">Partner's Commitment:</div>
+      {% if partner_commitment %}
+        <div class="row-value content">{{currency_symbol}}{{partner_commitment|floatformat:"2"}}</div>
+      {% else %}
+        <div class="row-value content">-</div>
+      {% endif %}
+    </div>
+    <br/>
+    <div class="row">
+      <div class="row-name">Investments:</div>
+      {% if investments %}
+      <div class="row-value content">{{currency_symbol}}{{investments|floatformat:"2"}}</div>
+      {% else %}
+      <div class="row-value content">-</div>
+      {% endif %}
+
+    </div>
+    <div class="row">
+      <div class="row-name">Management Fees:</div>
+      {% if management_fees %}
+      <div class="row-value content">{{currency_symbol}}{{management_fees|floatformat:"2"}}</div>
+      {% else %}
+      <div class="row-value content">-</div>
+      {% endif %}
+    </div>
+    <div class="row">
+      <div class="row-name">Organization Cost:</div>
+      {% if organization_cost %}
+      <div class="row-value content">{{currency_symbol}}{{organization_cost|floatformat:"2"}}</div>
+      {% else %}
+      <div class="row-value content">-</div>
+      {% endif %}
+    </div>
+    <div class="row">
+      <div class="row-name">Fund Expenses:</div>
+      {% if fund_expenses %}
+      <div class="row-value content">{{currency_symbol}}{{fund_expenses|floatformat:"2"}}</div>
+      {% else %}
+      <div class="row-value content">-</div>
+      {% endif %}
+    </div>
+    <div class="row">
+      <div class="short-line-break"></div>
+    </div>
+    <div class="row">
+      <div class="row-name"><b>Total Amount Due:</b></div>
+      {% if total_amount_due %}
+      <div class="row-value content"><b>{{currency_symbol}}{{total_amount_due|floatformat:"2"}}</b></div>
+      {% else %}
+      <div class="row-value content">-</div>
+      {% endif %}
+    </div>
+    <div class="row">
+      <div class="short-line-break"></div>
+    </div>
+    <div class="row">
+      <div class="row-name">Previously Contributed:</div>
+      {% if previously_contributed %}
+      <div class="row-value content">{{currency_symbol}}{{previously_contributed|floatformat:"2"}}</div>
+      {% else %}
+      <div class="row-value content">-</div>
+      {% endif %}
+    </div>
+    <div class="row">
+      <div class="row-name">Unpaid Commitment:</div>
+      {% if unpaid_commitment %}
+      <div class="row-value content">{{currency_symbol}}{{unpaid_commitment|floatformat:"2"}}</div>
+      {% else %}
+      <div class="row-value content">-</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="text">
+    <br/>
+    Capitalized terms not defined herein shall have the meanings set forth in the Partnership Agreement.
+  </div>
+
+  <div class="footer">
+    <hr class="line-break"/>
+    <span style="font-size: 10px; font-weight: 700;">Generated by &nbsp;</span>
+    <img src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjIiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCA2MiAxMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik04LjgwODI4IDAuNDIyMjQxQzguNTM4MDIgMC40MjIyNDEgOC4zMTg5MyAwLjYzODYyNSA4LjMxODkzIDAuOTA1NTQ5QzguMzE4OTMgMS4xNzI0NyA4LjUzODAyIDEuMzg4ODYgOC44MDgyOCAxLjM4ODg2SDEwLjg5NDZMMTIuMzI4MyA0LjcwNTA2QzExLjY4MDUgNS4xMzk3OSAxMS4yNTUgNS44NzM0MyAxMS4yNTUgNi43MDUyNEMxMS4yNTUgOC4wMzk4NSAxMi4zNTA1IDkuMTIxNzcgMTMuNzAxOCA5LjEyMTc3QzE1LjA1MzEgOS4xMjE3NyAxNi4xNDg1IDguMDM5ODUgMTYuMTQ4NSA2LjcwNTI0QzE2LjE0ODUgNS4zNzA2MiAxNS4wNTMxIDQuMjg4NyAxMy43MDE4IDQuMjg4N0MxMy41MjIxIDQuMjg4NyAxMy4zNDcgNC4zMDc4MiAxMy4xNzg0IDQuMzQ0MUwxMS42MjY3IDAuNzU0ODEyQzExLjU1ODggMC41OTc3MTYgMTEuNDA5IDAuNDkzMDcxIDExLjI0MDUgMC40Nzg5MjlDMTEuMTcxOSAwLjQ0Mjc1IDExLjA5MzYgMC40MjIyNDEgMTEuMDEwMyAwLjQyMjI0MUg4LjgwODI4Wk00Ljg5MzQ5IDkuMTIxNzdDNi4yMTI4MSA5LjEyMTc3IDcuMzEwNDEgOC4xODQyMSA3LjU0MDUzIDYuOTQ2ODlIOC44MDgyOEMxMC4xNTk2IDYuOTQ2ODkgMTEuMjU1IDUuODY0OTcgMTEuMjU1IDQuNTMwMzVDMTEuMjU1IDMuMTk1NzQgMTAuMTU5NiAyLjExMzgyIDguODA4MjggMi4xMTM4MkgyLjkzMTgxTDIuMzE3NDEgMC44NTc0NDRDMi4xOTk4NyAwLjYxNzA4OCAxLjkwNzMgMC41MTYzNTEgMS42NjM5NCAwLjYzMjQ0MUMxLjQyMDU4IDAuNzQ4NTMyIDEuMzE4NTggMS4wMzc0OSAxLjQzNjEyIDEuMjc3ODRMMS44NDQ5NCAyLjExMzgySDAuNDg5MzQ5QzAuMjE5MDg5IDIuMTEzODIgMCAyLjMzMDIgMCAyLjU5NzEyVjUuMDEzNjZDMCA2LjA4MTM1IDAuODc2MzU2IDYuOTQ2ODkgMS45NTc0IDYuOTQ2ODlIMi4yNDY0NUMyLjQ3NjU3IDguMTg0MjEgMy41NzQxNyA5LjEyMTc3IDQuODkzNDkgOS4xMjE3N1pNOC44MDgyOCA1Ljk4MDI4SDcuNTQwNTNDNy4zMTA0MSA0Ljc0Mjk1IDYuMjEyODEgMy44MDUzOSA0Ljg5MzQ5IDMuODA1MzlDMy41NzQxNyAzLjgwNTM5IDIuNDc2NTcgNC43NDI5NSAyLjI0NjQ1IDUuOTgwMjhIMS45NTc0QzEuNDE2ODggNS45ODAyOCAwLjk3ODY5OCA1LjU0NzUxIDAuOTc4Njk4IDUuMDEzNjZWMy4wODA0M0g4LjgwODI4QzkuNjE5MDYgMy4wODA0MyAxMC4yNzYzIDMuNzI5NTggMTAuMjc2MyA0LjUzMDM1QzEwLjI3NjMgNS4zMzExMiA5LjYxOTA2IDUuOTgwMjggOC44MDgyOCA1Ljk4MDI4Wk02LjYwNjE5IDYuNDYzNzVDNi42MDYxOSA3LjM5Nzk4IDUuODM5MzggOC4xNTUzMiA0Ljg5MzQ3IDguMTU1MzJDMy45NDc1NiA4LjE1NTMyIDMuMTgwNzUgNy4zOTc5OCAzLjE4MDc1IDYuNDYzNzVDMy4xODA3NSA1LjUyOTUyIDMuOTQ3NTYgNC43NzIxNyA0Ljg5MzQ3IDQuNzcyMTdDNS44MzkzOCA0Ljc3MjE3IDYuNjA2MTkgNS41Mjk1MiA2LjYwNjE5IDYuNDYzNzVaTTEzLjcwMTggOC4xNTUyQzE0LjUxMjUgOC4xNTUyIDE1LjE2OTggNy41MDYwNCAxNS4xNjk4IDYuNzA1MjdDMTUuMTY5OCA1LjkwNDUgMTQuNTEyNSA1LjI1NTM1IDEzLjcwMTggNS4yNTUzNUMxMi44OTEgNS4yNTUzNSAxMi4yMzM3IDUuOTA0NSAxMi4yMzM3IDYuNzA1MjdDMTIuMjMzNyA3LjUwNjA0IDEyLjg5MSA4LjE1NTIgMTMuNzAxOCA4LjE1NTJaIiBmaWxsPSIjRUNBMTA2Ii8+CjxwYXRoIGQ9Ik0yMy4xMTI4IDIuOTMzOTVIMjQuODY5OEMyNC44NDQ0IDEuNDE3MTEgMjMuNTc0MyAwLjM2OTg2MSAyMS42NDM3IDAuMzY5ODYxQzE5Ljc0MjcgMC4zNjk4NjEgMTguMzQ5OCAxLjQwMDQ4IDE4LjM1ODMgMi45NDY0MkMxOC4zNTQgNC4yMDE0NSAxOS4yNTU4IDQuOTIwMzkgMjAuNzIwNyA1LjI2NTMyTDIxLjY2NDggNS40OTgwNEMyMi42MDkgNS43MjI0NSAyMy4xMzQgNS45ODg0MiAyMy4xMzgyIDYuNTYxOTFDMjMuMTM0IDcuMTg1MjcgMjIuNTMyOCA3LjYwOTE1IDIxLjYwMTMgNy42MDkxNUMyMC42NDg3IDcuNjA5MTUgMTkuOTYyOSA3LjE3Njk2IDE5LjkwMzYgNi4zMjUwM0gxOC4xMjk2QzE4LjE3NjIgOC4xNjYwMiAxOS41MTgzIDkuMTE3NjggMjEuNjIyNSA5LjExNzY4QzIzLjczOTQgOS4xMTc2OCAyNC45ODQxIDguMTI0NDYgMjQuOTg4MyA2LjU2NjA2QzI0Ljk4NDEgNS4xNDg5NiAyMy44OTYgNC4zOTY3NyAyMi4zODg4IDQuMDY0MzFMMjEuNjA5OCAzLjg4MTQ2QzIwLjg1NjIgMy43MTEwNyAyMC4yMjU0IDMuNDM2NzkgMjAuMjM4MSAyLjgyNTlDMjAuMjM4MSAyLjI3NzM0IDIwLjczMzQgMS44NzQyNCAyMS42MzEgMS44NzQyNEMyMi41MDc0IDEuODc0MjQgMjMuMDQ1IDIuMjY0ODggMjMuMTEyOCAyLjkzMzk1WiIgZmlsbD0iI0VDQTEwNiIvPgo8cGF0aCBkPSJNMjYuMTg3NiA4Ljk5NzE3SDI3Ljk5MTJWMi42MTM5NkgyNi4xODc2VjguOTk3MTdaTTI3LjA5MzYgMS43OTExMkMyNy42MzEzIDEuNzkxMTIgMjguMDcxNiAxLjM4ODAyIDI4LjA3MTYgMC44OTM0ODNDMjguMDcxNiAwLjQwMzEwNyAyNy42MzEzIDAgMjcuMDkzNiAwQzI2LjU2MDEgMCAyNi4xMTk4IDAuNDAzMTA3IDI2LjExOTggMC44OTM0ODNDMjYuMTE5OCAxLjM4ODAyIDI2LjU2MDEgMS43OTExMiAyNy4wOTM2IDEuNzkxMTJaIiBmaWxsPSIjRUNBMTA2Ii8+CjxwYXRoIGQ9Ik0zMS44MzIyIDkuMTAxMDZDMzIuODgyMiA5LjEwMTA2IDMzLjQyODQgOC41MDY3OSAzMy42NzgyIDcuOTc0ODZIMzMuNzU0NFY4Ljk5NzE3SDM1LjUzMjZWMC40ODYyMjFIMzMuNzMzMlYzLjY4NjE0SDMzLjY3ODJDMzMuNDM2OCAzLjE2NjY3IDMyLjkxNjEgMi41MzA4NCAzMS44MjggMi41MzA4NEMzMC40MDEyIDIuNTMwODQgMjkuMTk0NiAzLjYxOTY1IDI5LjE5NDYgNS44MTM4N0MyOS4xOTQ2IDcuOTQ5OTIgMzAuMzUwNCA5LjEwMTA2IDMxLjgzMjIgOS4xMDEwNlpNMzIuNDAzOCA3LjY5MjI3QzMxLjUxODkgNy42OTIyNyAzMS4wMzYzIDYuOTE5MyAzMS4wMzYzIDUuODA1NTZDMzEuMDM2MyA0LjcwMDE0IDMxLjUxMDUgMy45Mzk2NCAzMi40MDM4IDMuOTM5NjRDMzMuMjgwMiAzLjkzOTY0IDMzLjc3MTMgNC42NjY4OSAzMy43NzEzIDUuODA1NTZDMzMuNzcxMyA2Ljk0NDIzIDMzLjI3MTcgNy42OTIyNyAzMi40MDM4IDcuNjkyMjdaIiBmaWxsPSIjRUNBMTA2Ii8+CjxwYXRoIGQ9Ik0zOS45NzkxIDkuMTIxODRDNDEuNTg3OSA5LjEyMTg0IDQyLjY3MTggOC4zNTMwMyA0Mi45MjU4IDcuMTY4NjRMNDEuMjU3NyA3LjA2MDZDNDEuMDc1NiA3LjU0NjgyIDQwLjYwOTkgNy44MDAzMiA0MC4wMDg3IDcuODAwMzJDMzkuMTA2OSA3LjgwMDMyIDM4LjUzNTQgNy4yMTQzNiAzOC41MzU0IDYuMjYyNjlWNi4yNTg1NEg0Mi45NjM5VjUuNzcyMzJDNDIuOTYzOSAzLjYwMzAyIDQxLjYyNiAyLjUzMDg0IDM5LjkwNzEgMi41MzA4NEMzNy45OTM0IDIuNTMwODQgMzYuNzUyOSAzLjg2NDgzIDM2Ljc1MjkgNS44MzQ2NUMzNi43NTI5IDcuODU4NSAzNy45NzY1IDkuMTIxODQgMzkuOTc5MSA5LjEyMTg0Wk0zOC41MzU0IDUuMTYxNDJDMzguNTczNSA0LjQzNDE3IDM5LjEzNjYgMy44NTIzNyAzOS45MzY3IDMuODUyMzdDNDAuNzIgMy44NTIzNyA0MS4yNjE5IDQuNDAwOTIgNDEuMjY2MSA1LjE2MTQySDM4LjUzNTRaIiBmaWxsPSIjRUNBMTA2Ii8+CjxwYXRoIGQ9Ik00Ny4wNzkxIDkuMTIxODRDNDguODEwNyA5LjEyMTg0IDQ5Ljg5ODggOC4xMjQ0NiA0OS45ODM1IDYuNjU3NDlINDguMjgxNUM0OC4xNzU3IDcuMzM5MDMgNDcuNzE4NCA3LjcyMTM2IDQ3LjEwMDMgNy43MjEzNkM0Ni4yNTc4IDcuNzIxMzYgNDUuNzExNiA3LjAyNzM1IDQ1LjcxMTYgNS44MDU1NkM0NS43MTE2IDQuNjAwNCA0Ni4yNjIgMy45MTA1NSA0Ny4xMDAzIDMuOTEwNTVDNDcuNzYwOCAzLjkxMDU1IDQ4LjE4NDEgNC4zMzg1OSA0OC4yODE1IDQuOTc0NDJINDkuOTgzNUM0OS45MDczIDMuNDk5MTMgNDguNzY4NCAyLjUzMDg0IDQ3LjA3MDYgMi41MzA4NEM0NS4wOTc3IDIuNTMwODQgNDMuODc4NCAzLjg3MzE1IDQzLjg3ODQgNS44MzA1QzQzLjg3ODQgNy43NzEyMyA0NS4wNzY1IDkuMTIxODQgNDcuMDc5MSA5LjEyMTg0WiIgZmlsbD0iI0VDQTEwNiIvPgo8cGF0aCBkPSJNNTIuOTkyNiA5LjExNzY4QzUzLjk1MzcgOS4xMTc2OCA1NC41NzYxIDguNzA2MjcgNTQuODkzNiA4LjExMkg1NC45NDQ0VjguOTk3MTdINTYuNjU0OVY0LjY5MTgzQzU2LjY1NDkgMy4xNzA4MyA1NS4zNDI0IDIuNTMwODQgNTMuODk0NCAyLjUzMDg0QzUyLjMzNjQgMi41MzA4NCA1MS4zMTE4IDMuMjYyMjUgNTEuMDYyIDQuNDI1ODZMNTIuNzMwMSA0LjU1ODg0QzUyLjg1MjkgNC4xMzQ5NiA1My4yMzgyIDMuODIzMjggNTMuODg2IDMuODIzMjhDNTQuNDk5OSAzLjgyMzI4IDU0Ljg1MTMgNC4xMjY2NSA1NC44NTEzIDQuNjUwMjdWNC42NzUyQzU0Ljg1MTMgNS4wODY2MiA1NC40MDY3IDUuMTQwNjUgNTMuMjc2MyA1LjI0ODY5QzUxLjk4OTIgNS4zNjUwNSA1MC44MzM0IDUuNzg4OTQgNTAuODMzNCA3LjIxNDM2QzUwLjgzMzQgOC40Nzc3IDUxLjc1MjEgOS4xMTc2OCA1Mi45OTI2IDkuMTE3NjhaTTUzLjUwOTIgNy44OTU5QzUyLjk1NDUgNy44OTU5IDUyLjU1NjYgNy42NDI0IDUyLjU1NjYgNy4xNTYxOEM1Mi41NTY2IDYuNjU3NDkgNTIuOTc1NyA2LjQxMjMgNTMuNjEwOCA2LjMyNTAzQzU0LjAwNDUgNi4yNzEwMSA1NC42NDggNi4xNzk1OCA1NC44NjQgNi4wMzgyOFY2LjcxNTY3QzU0Ljg2NCA3LjM4NDc0IDU0LjMwMDkgNy44OTU5IDUzLjUwOTIgNy44OTU5WiIgZmlsbD0iI0VDQTEwNiIvPgo8cGF0aCBkPSJNNTguMDU0MSA4Ljk5NzE3SDU5Ljg1NzdWNS4zODU4M0M1OS44NTc3IDQuNjAwNCA2MC40NDIgNC4wNjAxNSA2MS4yMzc5IDQuMDYwMTVDNjEuNDg3NyA0LjA2MDE1IDYxLjgzMDYgNC4xMDE3MSA2MiA0LjE1NTc0VjIuNTg0ODdDNjEuODM5MSAyLjU0NzQ3IDYxLjYxNDcgMi41MjI1MyA2MS40MzI3IDIuNTIyNTNDNjAuNzA0NSAyLjUyMjUzIDYwLjEwNzUgMi45MzgxMSA1OS44NzA0IDMuNzI3N0g1OS44MDI3VjIuNjEzOTZINTguMDU0MVY4Ljk5NzE3WiIgZmlsbD0iI0VDQTEwNiIvPgo8L3N2Zz4K' alt="xx"
+         style="vertical-align: text-bottom; padding-right: 20px;">
+    <span class="content" style="font-size: 9px;">If you have any questions please do not hesitate to contact
+        employeecoInvest@sidecar.com
+      </span>
+  </div>
+
+
+<div class="div-break"></div>
+
+  <div class="header">
+    <img src="{{company_logo}}" height="20" style="height: 20px"/>
+    <div class="row-header">
+      <div class="header-title">
+        <h1 class="title">{{company_name}}</h1>
+      </div>
+      <div class="content address">
+        <div>
+          {{company_address_street1}}<br />
+          {% if company_address_street2 %}
+          {{company_address_street2}}<br />
+          {% endif %}
+          {{company_address_city}}, {{company_address_state}} {{company_address_zipcode}},<br />
+          {{company_address_country}}
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="text">
+    <br/>
+    <b>Wire Transfer Instructions:</b>
+    <br/><br/>
+    Your payment in US dollars, must be made directly to {{fund_name}} for value on or
+    prior to {{due_date}} by wire transfer of immediately available funds to:
+    <br/><br/>
+  </div>
+
+
+  <div>
+    <div class="bank-info">
+      <div class="bank-info-name">Correspondent Bank:</div>
+      <div class="bank-info-value">XXX-XXX-XXXX</div>
+    </div>
+    <div class="bank-info">
+      <div class="bank-info-name">Correspondent Bank Address:</div>
+      <div class="bank-info-value">XXX-XXX-XXXX</div>
+    </div>
+    <div class="bank-info">
+      <div class="bank-info-name">Correspondent Bank ABA No:</div>
+      <div class="bank-info-value">XXX-XXX-XXXX</div>
+    </div>
+    <div class="bank-info">
+      <div class="bank-info-name">Correspondent Bank ABA No:</div>
+      <div class="bank-info-value">XXX-XXX-XXXX</div>
+    </div>
+    <div class="bank-info">
+      <div class="bank-info-name">With credit to</div>
+      <div class="bank-info-value">XXX-XXX-XXXX</div>
+    </div>
+    <div class="bank-info">
+      <div class="bank-info-name">Account No:</div>
+      <div class="bank-info-value">XXX-XXX-XXXX</div>
+    </div>
+  </div>
+
+  <div class="text">
+    <br/><br/>
+    <b>Please request that the sending bank identifies the investor name on the wire transfer.</b>
+    <br/><br/>
+    Please do not hesitate to contact: fund-manager@hellosidecar.com if you have any
+    questions or comments regarding this Capital Call.
+    <br/><br/>
+    Yours Sincerely,
+    <br/><br/>
+    {{fund_name}}
+    <br/><br/>
+    John Doe
+    <br/><br/>
+    Chief Executive Officer
+  </div>
+
+
+  <div class="footer">
+    <hr class="line-break"/>
+    <span style="font-size: 10px; font-weight: 700;">Generated by &nbsp;</span>
+    <img src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjIiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCA2MiAxMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik04LjgwODI4IDAuNDIyMjQxQzguNTM4MDIgMC40MjIyNDEgOC4zMTg5MyAwLjYzODYyNSA4LjMxODkzIDAuOTA1NTQ5QzguMzE4OTMgMS4xNzI0NyA4LjUzODAyIDEuMzg4ODYgOC44MDgyOCAxLjM4ODg2SDEwLjg5NDZMMTIuMzI4MyA0LjcwNTA2QzExLjY4MDUgNS4xMzk3OSAxMS4yNTUgNS44NzM0MyAxMS4yNTUgNi43MDUyNEMxMS4yNTUgOC4wMzk4NSAxMi4zNTA1IDkuMTIxNzcgMTMuNzAxOCA5LjEyMTc3QzE1LjA1MzEgOS4xMjE3NyAxNi4xNDg1IDguMDM5ODUgMTYuMTQ4NSA2LjcwNTI0QzE2LjE0ODUgNS4zNzA2MiAxNS4wNTMxIDQuMjg4NyAxMy43MDE4IDQuMjg4N0MxMy41MjIxIDQuMjg4NyAxMy4zNDcgNC4zMDc4MiAxMy4xNzg0IDQuMzQ0MUwxMS42MjY3IDAuNzU0ODEyQzExLjU1ODggMC41OTc3MTYgMTEuNDA5IDAuNDkzMDcxIDExLjI0MDUgMC40Nzg5MjlDMTEuMTcxOSAwLjQ0Mjc1IDExLjA5MzYgMC40MjIyNDEgMTEuMDEwMyAwLjQyMjI0MUg4LjgwODI4Wk00Ljg5MzQ5IDkuMTIxNzdDNi4yMTI4MSA5LjEyMTc3IDcuMzEwNDEgOC4xODQyMSA3LjU0MDUzIDYuOTQ2ODlIOC44MDgyOEMxMC4xNTk2IDYuOTQ2ODkgMTEuMjU1IDUuODY0OTcgMTEuMjU1IDQuNTMwMzVDMTEuMjU1IDMuMTk1NzQgMTAuMTU5NiAyLjExMzgyIDguODA4MjggMi4xMTM4MkgyLjkzMTgxTDIuMzE3NDEgMC44NTc0NDRDMi4xOTk4NyAwLjYxNzA4OCAxLjkwNzMgMC41MTYzNTEgMS42NjM5NCAwLjYzMjQ0MUMxLjQyMDU4IDAuNzQ4NTMyIDEuMzE4NTggMS4wMzc0OSAxLjQzNjEyIDEuMjc3ODRMMS44NDQ5NCAyLjExMzgySDAuNDg5MzQ5QzAuMjE5MDg5IDIuMTEzODIgMCAyLjMzMDIgMCAyLjU5NzEyVjUuMDEzNjZDMCA2LjA4MTM1IDAuODc2MzU2IDYuOTQ2ODkgMS45NTc0IDYuOTQ2ODlIMi4yNDY0NUMyLjQ3NjU3IDguMTg0MjEgMy41NzQxNyA5LjEyMTc3IDQuODkzNDkgOS4xMjE3N1pNOC44MDgyOCA1Ljk4MDI4SDcuNTQwNTNDNy4zMTA0MSA0Ljc0Mjk1IDYuMjEyODEgMy44MDUzOSA0Ljg5MzQ5IDMuODA1MzlDMy41NzQxNyAzLjgwNTM5IDIuNDc2NTcgNC43NDI5NSAyLjI0NjQ1IDUuOTgwMjhIMS45NTc0QzEuNDE2ODggNS45ODAyOCAwLjk3ODY5OCA1LjU0NzUxIDAuOTc4Njk4IDUuMDEzNjZWMy4wODA0M0g4LjgwODI4QzkuNjE5MDYgMy4wODA0MyAxMC4yNzYzIDMuNzI5NTggMTAuMjc2MyA0LjUzMDM1QzEwLjI3NjMgNS4zMzExMiA5LjYxOTA2IDUuOTgwMjggOC44MDgyOCA1Ljk4MDI4Wk02LjYwNjE5IDYuNDYzNzVDNi42MDYxOSA3LjM5Nzk4IDUuODM5MzggOC4xNTUzMiA0Ljg5MzQ3IDguMTU1MzJDMy45NDc1NiA4LjE1NTMyIDMuMTgwNzUgNy4zOTc5OCAzLjE4MDc1IDYuNDYzNzVDMy4xODA3NSA1LjUyOTUyIDMuOTQ3NTYgNC43NzIxNyA0Ljg5MzQ3IDQuNzcyMTdDNS44MzkzOCA0Ljc3MjE3IDYuNjA2MTkgNS41Mjk1MiA2LjYwNjE5IDYuNDYzNzVaTTEzLjcwMTggOC4xNTUyQzE0LjUxMjUgOC4xNTUyIDE1LjE2OTggNy41MDYwNCAxNS4xNjk4IDYuNzA1MjdDMTUuMTY5OCA1LjkwNDUgMTQuNTEyNSA1LjI1NTM1IDEzLjcwMTggNS4yNTUzNUMxMi44OTEgNS4yNTUzNSAxMi4yMzM3IDUuOTA0NSAxMi4yMzM3IDYuNzA1MjdDMTIuMjMzNyA3LjUwNjA0IDEyLjg5MSA4LjE1NTIgMTMuNzAxOCA4LjE1NTJaIiBmaWxsPSIjRUNBMTA2Ii8+CjxwYXRoIGQ9Ik0yMy4xMTI4IDIuOTMzOTVIMjQuODY5OEMyNC44NDQ0IDEuNDE3MTEgMjMuNTc0MyAwLjM2OTg2MSAyMS42NDM3IDAuMzY5ODYxQzE5Ljc0MjcgMC4zNjk4NjEgMTguMzQ5OCAxLjQwMDQ4IDE4LjM1ODMgMi45NDY0MkMxOC4zNTQgNC4yMDE0NSAxOS4yNTU4IDQuOTIwMzkgMjAuNzIwNyA1LjI2NTMyTDIxLjY2NDggNS40OTgwNEMyMi42MDkgNS43MjI0NSAyMy4xMzQgNS45ODg0MiAyMy4xMzgyIDYuNTYxOTFDMjMuMTM0IDcuMTg1MjcgMjIuNTMyOCA3LjYwOTE1IDIxLjYwMTMgNy42MDkxNUMyMC42NDg3IDcuNjA5MTUgMTkuOTYyOSA3LjE3Njk2IDE5LjkwMzYgNi4zMjUwM0gxOC4xMjk2QzE4LjE3NjIgOC4xNjYwMiAxOS41MTgzIDkuMTE3NjggMjEuNjIyNSA5LjExNzY4QzIzLjczOTQgOS4xMTc2OCAyNC45ODQxIDguMTI0NDYgMjQuOTg4MyA2LjU2NjA2QzI0Ljk4NDEgNS4xNDg5NiAyMy44OTYgNC4zOTY3NyAyMi4zODg4IDQuMDY0MzFMMjEuNjA5OCAzLjg4MTQ2QzIwLjg1NjIgMy43MTEwNyAyMC4yMjU0IDMuNDM2NzkgMjAuMjM4MSAyLjgyNTlDMjAuMjM4MSAyLjI3NzM0IDIwLjczMzQgMS44NzQyNCAyMS42MzEgMS44NzQyNEMyMi41MDc0IDEuODc0MjQgMjMuMDQ1IDIuMjY0ODggMjMuMTEyOCAyLjkzMzk1WiIgZmlsbD0iI0VDQTEwNiIvPgo8cGF0aCBkPSJNMjYuMTg3NiA4Ljk5NzE3SDI3Ljk5MTJWMi42MTM5NkgyNi4xODc2VjguOTk3MTdaTTI3LjA5MzYgMS43OTExMkMyNy42MzEzIDEuNzkxMTIgMjguMDcxNiAxLjM4ODAyIDI4LjA3MTYgMC44OTM0ODNDMjguMDcxNiAwLjQwMzEwNyAyNy42MzEzIDAgMjcuMDkzNiAwQzI2LjU2MDEgMCAyNi4xMTk4IDAuNDAzMTA3IDI2LjExOTggMC44OTM0ODNDMjYuMTE5OCAxLjM4ODAyIDI2LjU2MDEgMS43OTExMiAyNy4wOTM2IDEuNzkxMTJaIiBmaWxsPSIjRUNBMTA2Ii8+CjxwYXRoIGQ9Ik0zMS44MzIyIDkuMTAxMDZDMzIuODgyMiA5LjEwMTA2IDMzLjQyODQgOC41MDY3OSAzMy42NzgyIDcuOTc0ODZIMzMuNzU0NFY4Ljk5NzE3SDM1LjUzMjZWMC40ODYyMjFIMzMuNzMzMlYzLjY4NjE0SDMzLjY3ODJDMzMuNDM2OCAzLjE2NjY3IDMyLjkxNjEgMi41MzA4NCAzMS44MjggMi41MzA4NEMzMC40MDEyIDIuNTMwODQgMjkuMTk0NiAzLjYxOTY1IDI5LjE5NDYgNS44MTM4N0MyOS4xOTQ2IDcuOTQ5OTIgMzAuMzUwNCA5LjEwMTA2IDMxLjgzMjIgOS4xMDEwNlpNMzIuNDAzOCA3LjY5MjI3QzMxLjUxODkgNy42OTIyNyAzMS4wMzYzIDYuOTE5MyAzMS4wMzYzIDUuODA1NTZDMzEuMDM2MyA0LjcwMDE0IDMxLjUxMDUgMy45Mzk2NCAzMi40MDM4IDMuOTM5NjRDMzMuMjgwMiAzLjkzOTY0IDMzLjc3MTMgNC42NjY4OSAzMy43NzEzIDUuODA1NTZDMzMuNzcxMyA2Ljk0NDIzIDMzLjI3MTcgNy42OTIyNyAzMi40MDM4IDcuNjkyMjdaIiBmaWxsPSIjRUNBMTA2Ii8+CjxwYXRoIGQ9Ik0zOS45NzkxIDkuMTIxODRDNDEuNTg3OSA5LjEyMTg0IDQyLjY3MTggOC4zNTMwMyA0Mi45MjU4IDcuMTY4NjRMNDEuMjU3NyA3LjA2MDZDNDEuMDc1NiA3LjU0NjgyIDQwLjYwOTkgNy44MDAzMiA0MC4wMDg3IDcuODAwMzJDMzkuMTA2OSA3LjgwMDMyIDM4LjUzNTQgNy4yMTQzNiAzOC41MzU0IDYuMjYyNjlWNi4yNTg1NEg0Mi45NjM5VjUuNzcyMzJDNDIuOTYzOSAzLjYwMzAyIDQxLjYyNiAyLjUzMDg0IDM5LjkwNzEgMi41MzA4NEMzNy45OTM0IDIuNTMwODQgMzYuNzUyOSAzLjg2NDgzIDM2Ljc1MjkgNS44MzQ2NUMzNi43NTI5IDcuODU4NSAzNy45NzY1IDkuMTIxODQgMzkuOTc5MSA5LjEyMTg0Wk0zOC41MzU0IDUuMTYxNDJDMzguNTczNSA0LjQzNDE3IDM5LjEzNjYgMy44NTIzNyAzOS45MzY3IDMuODUyMzdDNDAuNzIgMy44NTIzNyA0MS4yNjE5IDQuNDAwOTIgNDEuMjY2MSA1LjE2MTQySDM4LjUzNTRaIiBmaWxsPSIjRUNBMTA2Ii8+CjxwYXRoIGQ9Ik00Ny4wNzkxIDkuMTIxODRDNDguODEwNyA5LjEyMTg0IDQ5Ljg5ODggOC4xMjQ0NiA0OS45ODM1IDYuNjU3NDlINDguMjgxNUM0OC4xNzU3IDcuMzM5MDMgNDcuNzE4NCA3LjcyMTM2IDQ3LjEwMDMgNy43MjEzNkM0Ni4yNTc4IDcuNzIxMzYgNDUuNzExNiA3LjAyNzM1IDQ1LjcxMTYgNS44MDU1NkM0NS43MTE2IDQuNjAwNCA0Ni4yNjIgMy45MTA1NSA0Ny4xMDAzIDMuOTEwNTVDNDcuNzYwOCAzLjkxMDU1IDQ4LjE4NDEgNC4zMzg1OSA0OC4yODE1IDQuOTc0NDJINDkuOTgzNUM0OS45MDczIDMuNDk5MTMgNDguNzY4NCAyLjUzMDg0IDQ3LjA3MDYgMi41MzA4NEM0NS4wOTc3IDIuNTMwODQgNDMuODc4NCAzLjg3MzE1IDQzLjg3ODQgNS44MzA1QzQzLjg3ODQgNy43NzEyMyA0NS4wNzY1IDkuMTIxODQgNDcuMDc5MSA5LjEyMTg0WiIgZmlsbD0iI0VDQTEwNiIvPgo8cGF0aCBkPSJNNTIuOTkyNiA5LjExNzY4QzUzLjk1MzcgOS4xMTc2OCA1NC41NzYxIDguNzA2MjcgNTQuODkzNiA4LjExMkg1NC45NDQ0VjguOTk3MTdINTYuNjU0OVY0LjY5MTgzQzU2LjY1NDkgMy4xNzA4MyA1NS4zNDI0IDIuNTMwODQgNTMuODk0NCAyLjUzMDg0QzUyLjMzNjQgMi41MzA4NCA1MS4zMTE4IDMuMjYyMjUgNTEuMDYyIDQuNDI1ODZMNTIuNzMwMSA0LjU1ODg0QzUyLjg1MjkgNC4xMzQ5NiA1My4yMzgyIDMuODIzMjggNTMuODg2IDMuODIzMjhDNTQuNDk5OSAzLjgyMzI4IDU0Ljg1MTMgNC4xMjY2NSA1NC44NTEzIDQuNjUwMjdWNC42NzUyQzU0Ljg1MTMgNS4wODY2MiA1NC40MDY3IDUuMTQwNjUgNTMuMjc2MyA1LjI0ODY5QzUxLjk4OTIgNS4zNjUwNSA1MC44MzM0IDUuNzg4OTQgNTAuODMzNCA3LjIxNDM2QzUwLjgzMzQgOC40Nzc3IDUxLjc1MjEgOS4xMTc2OCA1Mi45OTI2IDkuMTE3NjhaTTUzLjUwOTIgNy44OTU5QzUyLjk1NDUgNy44OTU5IDUyLjU1NjYgNy42NDI0IDUyLjU1NjYgNy4xNTYxOEM1Mi41NTY2IDYuNjU3NDkgNTIuOTc1NyA2LjQxMjMgNTMuNjEwOCA2LjMyNTAzQzU0LjAwNDUgNi4yNzEwMSA1NC42NDggNi4xNzk1OCA1NC44NjQgNi4wMzgyOFY2LjcxNTY3QzU0Ljg2NCA3LjM4NDc0IDU0LjMwMDkgNy44OTU5IDUzLjUwOTIgNy44OTU5WiIgZmlsbD0iI0VDQTEwNiIvPgo8cGF0aCBkPSJNNTguMDU0MSA4Ljk5NzE3SDU5Ljg1NzdWNS4zODU4M0M1OS44NTc3IDQuNjAwNCA2MC40NDIgNC4wNjAxNSA2MS4yMzc5IDQuMDYwMTVDNjEuNDg3NyA0LjA2MDE1IDYxLjgzMDYgNC4xMDE3MSA2MiA0LjE1NTc0VjIuNTg0ODdDNjEuODM5MSAyLjU0NzQ3IDYxLjYxNDcgMi41MjI1MyA2MS40MzI3IDIuNTIyNTNDNjAuNzA0NSAyLjUyMjUzIDYwLjEwNzUgMi45MzgxMSA1OS44NzA0IDMuNzI3N0g1OS44MDI3VjIuNjEzOTZINTguMDU0MVY4Ljk5NzE3WiIgZmlsbD0iI0VDQTEwNiIvPgo8L3N2Zz4K' alt="xx"
+         style="vertical-align: text-bottom; padding-right: 20px;">
+    <span class="content" style="font-size: 9px;">If you have any questions please do not hesitate to contact
+        employeecoInvest@sidecar.com
+      </span>
+  </div>
+
+</body>
+</html>

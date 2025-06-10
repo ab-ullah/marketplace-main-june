@@ -1,0 +1,11 @@
+export const CARRY_PARTICIPANT_DASHBOARD = "carry_participant_dashboard"
+export const AGGREGATOR = 'aggregator';
+export const COINVEST = 'coinvest';
+export const TOTAL_COMPENSATION = "total_compensation";
+export const INVESTOR_PORTFOLIO_PAGE = "investor_portfolio_page";
+export const INVESTMENT_SUMMARY_DATE_FILTERING = "investment_summary_date_filtering";
+export const INVESTMENT_HISTORIC_DATA = 'investment_historic_data'
+export const ADVISOR_USER = 'advisor_user'
+export const ADVISOR_FLOW = 'advisor_flow'
+export const CARRY_MANAGEMENT_COMMITMENTS = "carry_management_admin_commitments_tab"
+export const MULTIPLE_PORTFOLIO_CURRENCIES = "multiple_currencies_in_portfolio";

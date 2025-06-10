@@ -1,0 +1,2 @@
+CAN_PUSH_RECORDS_TO_BOOKS = "can_push_records_to_books"
+RAISE_ERROR_ON_MISSING_ALLOCATION_ACTION = "raise_error_on_missing_allocation_action"

@@ -1,0 +1,66 @@
+<html>
+<head>
+  <title></title>
+  <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+      body {
+          font-family: Inter;
+      }
+  </style>
+</head>
+<body>
+<table width="100%">
+  <tr>
+    <td align="center">
+      <table width="600" style="font-family: Poppins, Arial, Helvetica, sans-serif;
+                  margin: 0 auto;
+                  max-width: 550px;
+                  min-height: 100px;
+                  font-size: 12px;
+                  line-height: 18px;
+                  letter-spacing: 0.1px;">
+        <tr>
+          <td align="left" style="height: 60px; background: #413C69; padding: 25px">
+            <img src="{{logo_url}}" height="16px"/>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family: Inter; font-weight: normal; font-size: 15px;color: #303030; padding-top: 20px">
+            {% if fund_name %}
+            <p>The {{ program_name }} Team has published a {{ document_type }} for
+              your interest in the {{fund_name}}. Please login to the Employee
+              Co-Investment Portal to access the {{ document_type }}.</p>
+            {% else %}
+            <p>The {{ program_name }} Team has published a {{ document_type }}. Please login to the Employee
+              Co-Investment Portal to access the {{ document_type }}.</p>
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td align="center" style="padding: 60px">
+            <a href="{{dashboard_url}}" style="padding: 16px 40px;background: #ECA106;border-radius: 70px;font-weight: bold;font-family: Quicksand, Inter;font-size: 15px;color: #FFFFFF; text-decoration:none">Login Now</a>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family: Inter; font-weight: normal; font-size: 15px;color: #303030; padding-top: 20px">
+            If you have any questions or concerns related to your investment(s)
+            under the {{program_name}} Program please email the
+            {{ program_name }} Team at {{ support_email }}.
+            <!-- If you feel like you received it in error <a href="unsubscribe_url">click here</a> to unsubscribe. -->
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family: Inter; font-weight: normal; font-size: 15px;color: #303030; padding-top: 40px;">
+            <p>Thanks,</p>
+            <p>The {{program_name}} Team & Sidecar Team</p>
+          </td>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+</table>
+</body>
+</html>

@@ -1,0 +1,3 @@
+Last Name,First Name,EIN,Business Unit,Business Title,Position,Hire Date,Termination Date,Active Status,Manager EIN,Location - Name,Email - Primary Work,Investor Account Number,Cost Center
+John,Report,112233,ABC,Administrative Business Partner,Admin,08/02/2021,,Yes,224466,"Stockholm, Sweden",johnsmith+test@hellosidecar.com,,91217 Europe Administration
+David,Manager,224466,DEF,Assistant Vice President,Transacting,12/13/2021,,Yes,,"New York, New York",davidmanager+test@hellosidecar.com,71506,91411 RMCF Transactors

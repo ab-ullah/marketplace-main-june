@@ -1,0 +1,50 @@
+<html>
+<head>
+  <title></title>
+  <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+      body {
+          font-family: Inter;
+      }
+  </style>
+</head>
+<body>
+<table width="100%">
+  <tr>
+    <td align="center">
+      <table width="600" style="font-family: Poppins, Arial, Helvetica, sans-serif;
+                  margin: 0 auto;
+                  max-width: 550px;
+                  min-height: 100px;
+                  font-size: 12px;
+                  line-height: 18px;
+                  letter-spacing: 0.1px;">
+        <tr>
+          <td align="left" style="height: 60px; background: #413C69; padding: 25px">
+            <img src="{{logo_url}}" height="16px"/>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family: Inter; font-weight: normal; font-size: 15px;color: #303030; padding-top: 20px">
+            <p>Your application to {{ fund_name }} has been withdrawn.
+            </p>
+            {% if comment %}
+            <p>{{ comment }}</p>
+            {% endif %}
+            <!-- If you feel like you received it in error <a href="unsubscribe_url">click here</a> to unsubscribe. -->
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family: Inter; font-weight: normal; font-size: 15px;color: #303030; padding-top: 40px;">
+            <p>Thanks,</p>
+            <p>The {{ program_name }} Team</p>
+          </td>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>

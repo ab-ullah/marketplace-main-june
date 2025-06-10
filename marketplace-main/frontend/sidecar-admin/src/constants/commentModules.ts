@@ -1,0 +1,10 @@
+export const ELIGIBILITY_CRITERIA = 1
+export const KYC_RECORD = 2
+export const TAX_RECORD = 3
+export const BANKING_DETAILS = 4
+export const FUND_DOCUMENTS = 5
+export const DOCUMENTS_REQUEST = 6
+export const INVESTMENT_ALLOCATION = 7
+export const PARTICIPANT = 8
+export const AGREEMENTS = 9
+export const PROGRAM_DOCS = 10

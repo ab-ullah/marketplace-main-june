@@ -1,0 +1,1 @@
+PORTFOLIO_PAGE_MULTIPLE_CURRENCY_FLAG = 'multiple_currencies_in_portfolio'

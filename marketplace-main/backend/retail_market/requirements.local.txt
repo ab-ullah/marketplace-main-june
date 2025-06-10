@@ -1,0 +1,5 @@
+-r requirements.txt
+django-debug-toolbar==3.2.2
+awscli-local==0.16
+coverage==7.2.3
+ddt==1.6.0

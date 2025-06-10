@@ -1,0 +1,1 @@
+SG_COUNTRY_CODE = 'sg'

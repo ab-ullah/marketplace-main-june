@@ -1,0 +1,1 @@
+HK_COUNTRY_CODE = 'HK'

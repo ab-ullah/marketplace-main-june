@@ -1,0 +1,255 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+@font-face {
+    font-family: 'Quicksand';
+    src: url('assets/fonts/quicksand/Quicksand-Regular.eot');
+    src: url('assets/fonts/quicksand/Quicksand-Regular.eot?#iefix') format('embedded-opentype'),
+    url('assets/fonts/quicksand/Quicksand-Regular.woff2') format('woff2'),
+    url('assets/fonts/quicksand/Quicksand-Regular.woff') format('woff'),
+    url('assets/fonts/quicksand/Quicksand-Regular.ttf') format('truetype'),
+    url('assets/fonts/quicksand/Quicksand-Regular.svg#Quicksand') format('svg');
+}
+
+@font-face {
+    font-family: 'Quicksand Medium';
+    src: url('assets/fonts/quicksand/Quicksand-Medium.eot');
+    src: url('assets/fonts/quicksand/Quicksand-Medium.eot?#iefix') format('embedded-opentype'),
+    url('assets/fonts/quicksand/Quicksand-Medium.woff2') format('woff2'),
+    url('assets/fonts/quicksand/Quicksand-Medium.woff') format('woff'),
+    url('assets/fonts/quicksand/Quicksand-Medium.ttf') format('truetype'),
+    url('assets/fonts/quicksand/Quicksand-Medium.svg#Quicksand Medium') format('svg');
+}
+
+@font-face {
+    font-family: 'Quicksand Bold';
+    src: url('assets/fonts/quicksand/Quicksand-Bold.eot');
+    src: url('assets/fonts/quicksand/Quicksand-Bold.eot?#iefix') format('embedded-opentype'),
+    url('assets/fonts/quicksand/Quicksand-Bold.woff2') format('woff2'),
+    url('assets/fonts/quicksand/Quicksand-Bold.woff') format('woff'),
+    url('assets/fonts/quicksand/Quicksand-Bold.ttf') format('truetype'),
+    url('assets/fonts/quicksand/Quicksand-Bold.svg#Quicksand') format('svg');
+}
+
+
+.page-container {
+    margin-top: 95px;
+}
+
+.center-nav {
+    margin-left: 10%;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+body {
+    color: #020203;
+    font-family: 'Quicksand Medium';
+    font-size: 14px;
+    background: #ECEFF1;
+}
+
+body * {
+    color: #020203;
+    font-family: 'Quicksand Medium';
+}
+
+body h1, body h2, body h3, body h4, body h5, body h6 {
+    font-family: 'Inter';
+    font-weight: 400;
+}
+
+.page-header {
+    background: #fff;
+    padding: 15px 56px;
+    position: relative;
+    z-index: 3;
+    overflow: visible;
+}
+
+.page-header .page-title {
+    font-family: 'Inter';
+    font-size: 40px;
+    font-weight: bold;
+}
+
+.page-header .page-title .btn {
+    color: #fff;
+    background: #B0BEC5;
+    border-color: #B0BEC5;
+    float: right;
+    letter-spacing: 0.02em;
+    font-family: 'Quicksand Bold';
+    margin-top: 10px;
+    padding: 3px 14px 4px;
+}
+
+.page-header .page-title .btn:hover {
+    background: #a1b2ba;
+    border-color: #a1b2ba;
+}
+
+.btn {
+    font-family: 'Quicksand Bold';
+    border-radius: 40px !important;
+}
+
+.btn.btn-primary, .btn.btn-outline-primary {
+    font-size: 16px;
+    font-family: 'Quicksand Bold';
+    border-color: #470C75;
+    letter-spacing: 0.02em;
+    padding: 5px 16px;
+    margin-left: 12px;
+}
+
+.btn.btn-primary:hover, .btn.btn-primary:disabled, .btn.btn-outline-primary:hover {
+    color: #fff;
+    background: #390a5e;
+    border-color: #390a5e;
+}
+
+.btn.btn-primary {
+    color: #fff;
+    background: #470C75;
+}
+
+.btn.btn-outline-primary {
+    color: #470C75;
+}
+.btn.btn-outline-primary:disabled {
+    color: #470C75;
+    opacity: 0.5;
+}
+
+.btn.btn-outline-warning {
+    color: #E37628;
+    border-color: #E37628;
+    font-size: 18px;
+    padding: 7px 30px;
+}
+
+.btn.btn-outline-warning:hover {
+    color: #fff;
+    background: #E37628;
+    border-color: #E37628;
+}
+
+ul {
+    list-style-type: none;
+}
+
+.badge {
+    border-radius: 20px !important;
+    font-size: 12px;
+    font-family: 'Quicksand Bold';
+    padding: 6px 12px 5px !important;;
+}
+
+.badge.bg-success {
+    background: #10AC84 !important;
+}
+
+.badge.bg-secondary {
+    background: #B0BEC5 !important;
+}
+
+.blue-background {
+    background: #EBF3FB !important;
+}
+
+.react-flow__node-default .react-flow__handle {
+    background: transparent !important;
+    border: none;
+}
+
+.react-flow__node-default {
+    background: none !important;
+}
+
+.note-text {
+    color: #470C75;
+    font-size: 12px;
+}
+
+.white-bg {
+    background: #ffffff;
+}
+
+.errorText {
+    color: #8a2b2b;
+    margin-bottom: 15px;
+    font-style: italic;
+    font-weight: bold;
+}
+
+.disabled-option {
+    color: #aaa !important;
+    cursor: not-allowed !important;
+}
+
+.rs-table-row-header.rs-table-row:hover {
+    background: transparent !important;
+}
+
+.rs-table-hover .rs-table-row:hover {
+    background: transparent !important;
+}
+
+.rs-table-row-header {
+    background: transparent !important;
+}
+
+.rs-table-cell-content {
+    position: relative;
+    display: flex;
+    justify-content: center;
+}
+
+.react-datepicker__input-container > input {
+    width: 100%;
+    padding: 0.375rem 0.75rem;
+    border: 1px solid #d5cbcb;
+    border-radius: 4px;
+    min-height: 48px;
+}
+
+.recharts-tooltip-wrapper {
+    outline: none !important;
+}
+
+.funds-list-dropdown .dropdown-toggle {
+    width: max-content;
+    padding: 8px 24px 8px 24px;
+    border-radius: 70px;
+    color: #4a47a3;
+    border: 2px solid #4a47a3;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 20px;
+    letter-spacing: 0.02em;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    margin-right: 10px;
+}
+
+.funds-list-dropdown .dropdown-toggle:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.disabled-react-datepicker {
+    opacity: 0.6; /* Reduce opacity to indicate it's disabled */
+    cursor: not-allowed; /* Change cursor to not-allowed */
+  }
+
+  .react-datepicker__year-read-view--down-arrow,
+   .react-datepicker__month-read-view--down-arrow,
+    .react-datepicker__month-year-read-view--down-arrow{
+    top: 2px !important;
+  }

@@ -1,0 +1,275 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@500&display=swap');
+
+@font-face {
+    font-family: 'Quicksand';
+    src: url('assets/fonts/quicksand/Quicksand-Regular.eot');
+    src: url('assets/fonts/quicksand/Quicksand-Regular.eot?#iefix') format('embedded-opentype'),
+    url('assets/fonts/quicksand/Quicksand-Regular.woff2') format('woff2'),
+    url('assets/fonts/quicksand/Quicksand-Regular.woff') format('woff'),
+    url('assets/fonts/quicksand/Quicksand-Regular.ttf') format('truetype'),
+    url('assets/fonts/quicksand/Quicksand-Regular.svg#Quicksand') format('svg');
+}
+
+@font-face {
+    font-family: 'Quicksand Medium';
+    src: url('assets/fonts/quicksand/Quicksand-Medium.eot');
+    src: url('assets/fonts/quicksand/Quicksand-Medium.eot?#iefix') format('embedded-opentype'),
+    url('assets/fonts/quicksand/Quicksand-Medium.woff2') format('woff2'),
+    url('assets/fonts/quicksand/Quicksand-Medium.woff') format('woff'),
+    url('assets/fonts/quicksand/Quicksand-Medium.ttf') format('truetype'),
+    url('assets/fonts/quicksand/Quicksand-Medium.svg#Quicksand Medium') format('svg');
+}
+
+@font-face {
+    font-family: 'Quicksand Bold';
+    src: url('assets/fonts/quicksand/Quicksand-Bold.eot');
+    src: url('assets/fonts/quicksand/Quicksand-Bold.eot?#iefix') format('embedded-opentype'),
+    url('assets/fonts/quicksand/Quicksand-Bold.woff2') format('woff2'),
+    url('assets/fonts/quicksand/Quicksand-Bold.woff') format('woff'),
+    url('assets/fonts/quicksand/Quicksand-Bold.ttf') format('truetype'),
+    url('assets/fonts/quicksand/Quicksand-Bold.svg#Quicksand') format('svg');
+}
+
+body {
+    font-family: 'Quicksand';
+    font-size: 14px;
+    color: #091626;
+}
+
+section {
+    padding: 40px;
+}
+
+section .section-title {
+    font-size: 32px;
+    margin-bottom: 20px;
+    font-family: 'Inter';
+    font-weight: 400;
+}
+
+.page-container {
+    margin-top: 95px;
+}
+
+/*.center-nav {*/
+/*    margin-left: 23%;*/
+/*}*/
+
+.tooltip {
+    background: white;
+    box-shadow: 0 0 9px 10px rgba(0, 0, 0, 0.15);
+    border-radius: 6px;
+    margin-top: 10px;
+}
+
+.tooltip-arrow {
+    display: none !important;
+}
+
+.tooltip-inner {
+    background: #FFF;
+    color: #000;
+    max-width: 400px;
+}
+
+.infinite-scroll-component > .table-responsive {
+    overflow: unset;
+}
+
+#notificationsTable {
+    position: relative;
+}
+
+#notificationsTable thead{
+    position: sticky;
+    top: 0px;
+}
+
+#notificationsTable th .btn-primary {
+    padding-top: 0;
+    padding-bottom: 0;
+    width: auto;
+    padding-right: 0;
+}
+
+#notificationsTable th button.dropdown-toggle {
+    padding-left: 8px;
+}
+
+#notificationsTable th button.dropdown-toggle:after {
+    margin-top: 10px;
+}
+
+#notificationsTable th button:active,
+#notificationsTable th button:focus {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    cursor: text;
+}
+
+.tooltip.show,
+#notificationsTable th .dropdown-menu,
+#notificationsTable th .rdrDateRangeWrapper {
+    border: 0;
+    border-radius: 4px;
+    overflow: auto;
+    box-shadow: 0 4px 11px rgba(0, 0, 0, 0.25);
+}
+
+.tooltip.show {
+    opacity: 1;
+}
+
+.tooltip.show div {
+    padding: 5px 8px;
+}
+
+.chart-value {
+    font-family: 'Quicksand Bold';
+}
+
+.notifications-table td,
+.notifications-table th {
+    vertical-align: middle !important;
+}
+
+.modal-lg {
+    max-width: 900px !important;
+}
+
+.recharts-wrapper {
+    z-index: 100;
+}
+
+@media screen and (max-width: 767px) {
+    section {
+        padding: 20px;
+    }
+
+    section .section-title {
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+
+    section .hstack {
+        display: block;
+        margin-bottom: 10px;
+    }
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.page-header {
+    background: #fff;
+    padding: 15px 56px;
+    position: relative;
+    z-index: 3;
+    overflow: visible;
+}
+
+.page-header .page-title {
+    font-family: 'Inter';
+    font-size: 40px;
+    font-weight: bold;
+}
+
+.page-header .page-title .btn {
+    color: #fff;
+    background: #B0BEC5;
+    border-color: #B0BEC5;
+    float: right;
+    letter-spacing: 0.02em;
+    font-family: 'Quicksand Bold';
+    margin-top: 10px;
+    padding: 3px 14px 4px;
+}
+
+.page-header .page-title .btn:hover {
+    background: #a1b2ba;
+    border-color: #a1b2ba;
+}
+
+ul {
+    list-style-type: none;
+}
+
+.badge {
+    border-radius: 20px !important;
+    font-size: 12px;
+    font-family: 'Quicksand Bold';
+    padding: 6px 12px 5px !important;;
+}
+
+.badge.bg-success {
+    background: #10AC84 !important;
+}
+
+.badge.bg-secondary {
+    background: #B0BEC5 !important;
+}
+
+.blue-background {
+    background: #EBF3FB !important;
+}
+
+.note-text {
+    color: #470C75;
+    font-size: 12px;
+}
+
+.white-bg {
+    background: #ffffff;
+}
+
+.errorText {
+    color: #8a2b2b;
+    margin-bottom: 15px;
+    font-style: italic;
+    font-weight: bold;
+}
+
+.underlined {
+    text-decoration: underline;
+}
+
+.ownership-table .rs-table-cell-wrap{
+    display: flex;
+    align-items: center;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+}
+
+.my-table .rs-table-row {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  
+  .my-table .rs-table-row:first-child {
+    /* padding-top: 0; */
+  }
+  
+  .my-table .rs-table-row:last-child {
+    padding-bottom: 0;
+  }
+
+  .rs-table-hover .rs-table-row:hover {
+    background: none !important;
+}
+
+.rs-table-body-row-wrapper .rs-table-cell-content{
+    padding-top: 0px
+}
+
+.rs-table-row-header{
+    padding-top: 0px !important;
+}
+
+.bold {
+    font-family: "Inter" !important;
+    font-weight: 500;
+}

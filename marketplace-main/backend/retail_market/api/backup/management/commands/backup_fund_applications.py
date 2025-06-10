@@ -1,0 +1,32 @@
+import json
+import logging
+
+import boto3
+from dateutil.utils import today
+from django.core.management.base import BaseCommand
+from django.core.serializers.json import DjangoJSONEncoder
+
+from api.applications.models import Application
+from django.conf import settings
+
+from api.backup.models import ApplicationBackup
+from django.apps import apps
+
+from api.backup.serializers import CompleteApplicationBackup
+from api.funds.models import Fund
+
+logger = logging.getLogger(__name__)
+
+
+class Command(BaseCommand):
+    help = 'Backup everything regarding a fund'
+
+    def add_arguments(self, parser):
+        parser.add_argument('fund_id', type=int)
+
+    def handle(self, *args, **options):
+        fund_id = options.get('fund_id')
+        backup_storage = apps.get_app_config('backup').backup_storage
+        fund = Fund.objects.get(pk=fund_id)
+        output = fund.backup_serialized_to(CompleteApplicationBackup, backup_storage)
+        self.stdout.write(json.dumps({**output, **{'message': "Successful"}}), ending='\n')
