@@ -32,7 +32,8 @@ from api.carry_pools.admin_views.fund_carry_pools_views import (
     CarryGpCommitmentDetailAPIView, CarryGpCommitmentParticipantListAPIView, CarryParticipantEntityTypes,
     UserAllocationsExportAPIView, CarryHurdleListCreateAPIView, CarryHurdleDetailAPIView,
     AllocationValueAdjustmentListCreateAPIView, AllocationValueAdjustmentDetailAPIView,
-    CarryPlanAdjustmentAllocationsAPIView, CarryCreateTransferAPIView, ForfeiturePreviewAPIView)
+    CarryPlanAdjustmentAllocationsAPIView, CarryCreateTransferAPIView, ForfeiturePreviewAPIView,
+    UserCarryEstimatedValueAPIView)
 
 
 
@@ -149,6 +150,11 @@ urlpatterns = [
         'user-carry-allocations/<int:user_id>',
         UserCarryAllocationAPIView.as_view(),
         name='user-carry-allocations'
+    ),
+    path(
+        'carry-estimated-value/<int:user_id>',
+        UserCarryEstimatedValueAPIView.as_view(),
+        name='carry-estimated-value'
     ),
     path(
         'forfeiture/<int:user_id>',

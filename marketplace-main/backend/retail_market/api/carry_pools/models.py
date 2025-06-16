@@ -1,4 +1,5 @@
 from collections import defaultdict
+from datetime import datetime
 
 import encrypted_fields.fields
 from fractions import Fraction
@@ -155,6 +156,55 @@ class CarryPlan(BaseModel):
             total_value += sum(tranche.estimated_value or 0 for tranche in carry_investment_map.get(carry_plan_id, []))
             carry_values[carry_plan_id] = total_value
 
+        return carry_values
+
+    @staticmethod
+    def get_carry_estimated_values(carry_plan_ids, start_date, end_date, calculation_date):
+        fund_carry_plan = FundCarryPlan.objects.filter(
+            carry_plan__in=carry_plan_ids
+        ).select_related('fund').first()
+        deal_carry_plan = DealCarryPlan.objects.filter(
+            carry_plan__in=carry_plan_ids
+        ).select_related('deal').first()
+        investment_carry_plan = InvestmentTrancheCarryPlan.objects.filter(
+            carry_plan__in=carry_plan_ids
+        ).select_related('investment_tranche').first()
+
+        # Given as_of_date
+        calculation_date = datetime.strptime(calculation_date, "%Y-%m-%d").date()
+
+        fund = fund_carry_plan.fund if fund_carry_plan else None
+        fund_history = fund.history.filter(
+            estimated_value_date__range=(start_date, end_date)
+        ).values('estimated_value_date', 'estimated_value') if fund else []
+        fund_closest_estimated_value = min(
+            fund_history,
+            key=lambda x: abs(x["estimated_value_date"] - calculation_date)
+        ) if fund_history else None
+
+        deal = deal_carry_plan.deal if deal_carry_plan else None
+        deal_history = deal.history.filter(
+            estimated_value_date__range=(start_date, end_date)
+        ).values('estimated_value_date', 'estimated_value') if deal else []
+        deal_closest_estimated_value = min(
+            deal_history,
+            key=lambda x: abs(x["estimated_value_date"] - calculation_date)
+        ) if deal_history else None
+
+        tranche = investment_carry_plan.investment_tranche if investment_carry_plan else None
+        tranche_history = tranche.history.filter(
+            estimated_value_date__range=(start_date, end_date)
+        ).values('estimated_value_date', 'estimated_value') if tranche else []
+        tranche_closest_estimated_value = min(
+            tranche_history,
+            key=lambda x: abs(x["estimated_value_date"] - calculation_date)
+        ) if tranche_history else None
+
+        total_estimated_value = fund_closest_estimated_value['estimated_value'] if fund_closest_estimated_value else 0
+        total_estimated_value += deal_closest_estimated_value['estimated_value'] if deal_closest_estimated_value else 0
+        total_estimated_value += tranche_closest_estimated_value['estimated_value'] if tranche_closest_estimated_value else 0
+        carry_values = {}
+        carry_values[int(carry_plan_ids[0])] = total_estimated_value
         return carry_values
 
     @property

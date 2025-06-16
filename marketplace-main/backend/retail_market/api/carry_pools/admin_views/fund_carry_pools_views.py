@@ -1,5 +1,6 @@
 import csv
 from decimal import Decimal
+from datetime import datetime
 
 from django.db.models import Count, Subquery, Sum, Prefetch
 from django_pglocks import advisory_lock
@@ -472,6 +473,27 @@ class UserCarryAllocationAPIView(AdminViewMixin, APIView, VestingDateViewMixin):
         return Response(sorted_data, status=status.HTTP_200_OK)
 
 
+class UserCarryEstimatedValueAPIView(AdminViewMixin, APIView, VestingDateViewMixin):
+   def get(self, request, user_id):
+        user = get_object_or_404(RetailUser, id=user_id)
+        user_carry_participants = user.user_carry_participants.all()
+        carry_participant_ids = [user_carry_participant.carry_participant_id for user_carry_participant in
+                                 user_carry_participants]
+        service = UserCarryAllocationService(
+            carry_participant_ids=carry_participant_ids,
+            company_id=self.company.id,
+            calculation_date=self.calculation_date
+        )
+        carry_plan_data = dict()
+        start_date_str = request.GET.get('start_date')
+        end_date_str = request.GET.get('end_date')
+        carry_plan_data['carry_plan_id'] = request.GET.get('carry_plan_id')
+        carry_plan_data['start_date'] = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        carry_plan_data['end_date'] = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        allocations_response = service.get_user_data(carry_plan_data=carry_plan_data)
+        return Response(allocations_response, status=status.HTTP_200_OK)
+
+
 class ForfeitureAPIView(AdminViewMixin, APIView, VestingDateViewMixin):
 
     def post(self, request, user_id):
@@ -489,7 +511,7 @@ class ForfeitureAPIView(AdminViewMixin, APIView, VestingDateViewMixin):
         )
         allocations_response = service.get_user_data()
         allocations = service.forfeit_allocations(forfeiture_data, allocations_response)
-        allocations_response = service.get_user_data(allocations)
+        allocations_response = service.get_user_data(allocations_data=allocations)
         return Response(allocations_response, status=status.HTTP_201_CREATED)
 
 

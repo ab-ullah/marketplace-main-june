@@ -69,14 +69,23 @@ class UserCarryAllocationService:
 
         return carry_pool_dict
 
-    def get_user_data(self, allocations_data=None):
+    def get_user_data(self, allocations_data=None, carry_plan_data=None):
         if allocations_data is None:
             allocations_data = []
         allocation_actions = self.get_create_allocation_action_for_user()
         self.prepare_allocation_actions([item['allocation_id'] for item in allocation_actions])
         latest_carry_pools = self.prepare_latest_carry_pools(allocation_actions)
         carry_plan_ids = [item.carry_plan_id for item in latest_carry_pools.values()]
-        bulk_estimated_values = CarryPlan.get_bulk_carry_estimated_values(carry_plan_ids)
+
+        if carry_plan_data:
+            bulk_estimated_values = CarryPlan.get_carry_estimated_values(
+                [carry_plan_data.get('carry_plan_id')],
+                carry_plan_data.get('start_date'),
+                carry_plan_data.get('end_date'),
+                self.calculation_date
+                )
+        else:
+            bulk_estimated_values = CarryPlan.get_bulk_carry_estimated_values(carry_plan_ids)
 
         participant_distributions = ParticipantDistribution.objects.filter(
             company_id=self.company_id,
@@ -103,6 +112,8 @@ class UserCarryAllocationService:
 
             carry_pool = latest_carry_pools[allocation_action['base_pool_id']]
             carry_plan = carry_pool.carry_plan
+            if carry_plan_data:
+                carry_plan = CarryPlan.objects.get(id=carry_plan_data.get('carry_plan_id'))
 
             allocation = self.get_updated_vested_points(
                 allocation_id=allocation_action['allocation_id'],
@@ -134,6 +145,12 @@ class UserCarryAllocationService:
             carry_plan_estimated_value = bulk_estimated_values.get(carry_plan.id, 0)
             carry_pool_bps = carry_pool.bps if carry_pool else 0
 
+            if carry_plan_data and carry_pool.carry_plan == carry_plan:
+                estimated_values_dict = {
+                        'carry_plan_id': carry_plan.id,
+                        'carry_estimated_value': estimated_values['carry_estimated_value'],
+                        'fair_market_value': estimated_values['fair_market_value']
+                    }
             appendable = {
                 **allocation,
                 'carry_plan_name': carry_plan.name,
@@ -161,7 +178,8 @@ class UserCarryAllocationService:
             }
 
             allocations.append(appendable)
-
+        if carry_plan_data:
+            return estimated_values_dict
         serializer = UserCarryDetailSerializer(allocations, many=True)
         return serializer.data
     
