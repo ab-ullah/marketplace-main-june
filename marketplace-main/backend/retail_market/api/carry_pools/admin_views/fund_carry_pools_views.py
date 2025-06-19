@@ -488,10 +488,17 @@ class UserCarryEstimatedValueAPIView(AdminViewMixin, APIView, VestingDateViewMix
         start_date_str = request.GET.get('start_date')
         end_date_str = request.GET.get('end_date')
         carry_plan_data['carry_plan_id'] = request.GET.get('carry_plan_id')
+        carry_plan_data['allocation_id'] = request.GET.get('allocation_id')
         carry_plan_data['start_date'] = datetime.strptime(start_date_str, '%Y-%m-%d').date()
         carry_plan_data['end_date'] = datetime.strptime(end_date_str, '%Y-%m-%d').date()
-        allocations_response = service.get_user_data(carry_plan_data=carry_plan_data)
-        return Response(allocations_response, status=status.HTTP_200_OK)
+        estimated_values = service.get_carry_estimated_values(
+                carry_plan_data.get('carry_plan_id'),
+                carry_plan_data.get('allocation_id'),
+                carry_plan_data.get('start_date'),
+                carry_plan_data.get('end_date'),
+                self.calculation_date
+                )
+        return Response(estimated_values, status=status.HTTP_200_OK)
 
 
 class ForfeitureAPIView(AdminViewMixin, APIView, VestingDateViewMixin):
@@ -511,7 +518,7 @@ class ForfeitureAPIView(AdminViewMixin, APIView, VestingDateViewMixin):
         )
         allocations_response = service.get_user_data()
         allocations = service.forfeit_allocations(forfeiture_data, allocations_response)
-        allocations_response = service.get_user_data(allocations_data=allocations)
+        allocations_response = service.get_user_data(allocations)
         return Response(allocations_response, status=status.HTTP_201_CREATED)
 
 
