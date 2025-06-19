@@ -1,5 +1,4 @@
 from collections import defaultdict
-from datetime import datetime
 
 import encrypted_fields.fields
 from fractions import Fraction
