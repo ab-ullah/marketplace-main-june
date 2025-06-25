@@ -6,7 +6,7 @@ from django.http import Http404
 from rest_framework.generics import get_object_or_404
 
 from api.carry_pools.models import AllocationAction, CarryPlan, CarryDocument, CarryParticipant, \
-    ParticipantDistribution, CarryPool, CarryHurdle
+    ParticipantDistribution, CarryPool, CarryHurdle, AllocationValueAdjustment, FundCarryPlan
 from api.carry_pools.serializers import (AllocationActionSerializer,
                                          UserCarryDetailSerializer, UserCarryWithVestingDetailSerializer,
                                          ParticipantDistributionSerializer, CarryHurdleSerializer)
@@ -330,6 +330,94 @@ class UserCarryAllocationService:
         self.add_hurdles_data(allocation_data, allocation, carry_plan)
 
         return allocation_data
+
+
+    def get_carry_estimated_values(self, carry_plan_id, allocation_id, start_date, end_date, calculation_date):
+
+        self.prepare_allocation_actions(allocation_ids=[allocation_id])
+        carry_plan = get_object_or_404(CarryPlan, id=carry_plan_id)
+        carry_pool = get_carry_pool_of_carry_plan(carry_plan_id, carry_plan.company_id)
+        if self.carry_pool_status:
+            allocation = self.get_allocation_from_pool_with_status(
+                base_pool_id=carry_pool.external_id,
+                parent_pool_id=carry_pool.external_id,
+                allocation_id=allocation_id
+            )
+        else:
+            allocation = get_allocation_from_pool(
+                base_pool_id=carry_pool.external_id,
+                parent_pool_id=carry_pool.external_id,
+                allocation_id=allocation_id,
+                company_id=carry_plan.company.id
+            )
+        if not allocation:
+            raise Http404('Allocation not found')
+        allocation_action = get_object_or_404(AllocationAction, id=allocation['allocation_action_id'])
+
+        self.adjust_allocation_actions(allocation)
+        allocation = self.get_updated_vested_points(
+            allocation_id=allocation_id,
+            base_pool_id=carry_pool.external_id,
+            parent_pool_id=carry_pool.external_id,
+            create_date=allocation_action.created_at.strftime("%Y-%m-%d"),
+            allocation=allocation,
+        )
+        value_adjustments = carry_plan.get_adjustments_by_allocations(calculation_date=self.calculation_date)
+
+        fund_carry_plan = FundCarryPlan.objects.filter(
+            carry_plan=carry_plan_id
+        ).select_related('fund').first()
+        if not fund_carry_plan:
+            return {}
+        list_of_dates = list()
+        estimated_values_dict = dict()
+        carry_estimated_values = dict()
+
+        fund = fund_carry_plan.fund if fund_carry_plan else None
+        fund_history = fund.history.filter(
+            estimated_value_date__range=(start_date, end_date)
+        ).values('estimated_value_date', 'estimated_value') if fund else []
+        allocation_actions = AllocationAction.objects.filter(
+            allocation_id=allocation_id,
+            grant_date__range=(start_date, end_date),
+        ).values('grant_date')
+        allocation_value_adjustments = AllocationValueAdjustment.objects.filter(
+            allocation_id=allocation_id,
+            effective_date__range=(start_date, end_date)
+        ).values('effective_date')
+
+        list_of_dates += [item['estimated_value_date'] for item in fund_history]
+        list_of_dates += [item['grant_date'].date() for item in allocation_actions]
+        list_of_dates += [item['effective_date'].date() for item in allocation_value_adjustments]
+
+
+        fund_history_sorted = sorted(fund_history, key=lambda x: x['estimated_value_date'], reverse=True)
+        for date in list_of_dates:
+            previous_nearest = self.get_previous_nearest_estimated_value(date, fund_history_sorted)
+            estimated_values_dict[date] = previous_nearest
+
+        for date in estimated_values_dict:
+            estimated_values = EstimatedValuesService(
+                {
+                    'allocation': allocation,
+                    'carry_plan': carry_plan,
+                    'carry_pool': carry_pool,
+                    'carry_plan_estimated_value': estimated_values_dict[date]['estimated_value'],
+                    'carry_plan_fair_market_value': carry_plan.fair_market_value,
+                    'carry_pool_status': self.carry_pool_status,
+                    'calculation_date': self.calculation_date,
+                    'value_adjustments': value_adjustments,
+                }
+            ).calculate()
+            carry_estimated_values[str(date)] = str(estimated_values['carry_estimated_value'])
+        return carry_estimated_values
+
+    def get_previous_nearest_estimated_value(self, target_date, fund_history_sorted):
+        '''Function to find previous nearest value'''
+        for record in fund_history_sorted:
+            if record['estimated_value_date'] <= target_date:
+                return record
+        return None
 
     def get_participant_distributions(self, allocation_id, company):
         participant_distributions = ParticipantDistribution.objects.filter(
