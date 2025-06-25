@@ -21,6 +21,8 @@ logger = logging.getLogger()
 
 
 class BaseModel(models.Model):
+    staging_id = models.IntegerField(null=True, blank=True, unique=True, db_index=True)
+    production_id = models.IntegerField(null=True, blank=True, unique=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
 
