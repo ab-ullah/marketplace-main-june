@@ -11,9 +11,11 @@ class ExporterService:
 
     def deep_serialize_instance(self, instance, depth, env='staging', exported=None):
         if depth > self.max_depth:
-            return 
+            return None
+
         if exported is None:
             exported = {}
+
         key = f"{instance._meta.label}:{getattr(instance, 'id')}"
         if key in exported:
             return
@@ -26,26 +28,50 @@ class ExporterService:
             'm2m': {}
         }
 
-        exported[key] = data  # Mark as exported to prevent infinite recursion
-        depth +=1
+        exported[key] = data  # Prevent recursion
+        depth += 1
+
         for field in instance._meta.get_fields():
+            # Handle M2M
             if field.is_relation and field.many_to_many:
-                if field.auto_created:  # This is a reverse relation
+                if field.auto_created:
                     related_objects = getattr(instance, field.get_accessor_name()).all()
                 else:
                     related_objects = getattr(instance, field.name).all()
-                data['m2m'][field.name] = [
+                serialized = [
                     self.deep_serialize_instance(obj, depth, env, exported)
-                    for obj in related_objects if self.deep_serialize_instance(obj, depth, env, exported)
+                    for obj in related_objects
                 ]
+                serialized = [obj for obj in serialized if isinstance(obj, dict)]
+                if serialized:
+                    data['m2m'][field.name] = serialized
+
+            # Handle FK and OneToOne
             elif field.is_relation and not field.auto_created:
                 related_obj = getattr(instance, field.name, None)
                 if related_obj:
-                    data['relations'][field.name] = self.deep_serialize_instance(related_obj, depth, env, exported)
+                    # Put just the ID in fields
+                    data['fields'][field.name] = getattr(related_obj, 'id', None)
+                    # Optionally serialize full relation if in depth
+                    serialized = self.deep_serialize_instance(related_obj, depth, env, exported)
+                    if isinstance(serialized, dict):
+                        data['relations'][field.name] = serialized
                 else:
-                    data['relations'][field.name] = None
+                    data['fields'][field.name] = None
+
+            # Handle all other fields (non-relational)
             elif not field.is_relation:
-                data['fields'][field.name] = getattr(instance, field.name)
+                try:
+                    value = getattr(instance, field.name)
+                    data['fields'][field.name] = value
+                except Exception:
+                    pass  # Optionally log or skip silently
+
+        # Prune empty structures
+        if not data['relations']:
+            del data['relations']
+        if not data['m2m']:
+            del data['m2m']
 
         return data
 
