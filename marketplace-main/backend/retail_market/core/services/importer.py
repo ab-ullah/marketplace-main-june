@@ -1,16 +1,12 @@
-import logging
 from django.apps import apps
 from django.db import transaction
 from django.db.models.fields.related import ForeignKey, OneToOneField
-
-logger = logging.getLogger(__name__)
 
 
 class ImportService:
     def __init__(self, env='staging'):
         self.env = env
         self.imported = {}  # Keep track of imported objects to avoid duplicates
-        self.errors = []
 
     def import_data(self, data_list):
         imported_objects = []
@@ -22,16 +18,15 @@ class ImportService:
                 except Exception as e:
                     model_label = data.get('model', 'Unknown')
                     env_id = data.get('env_id', 'Unknown')
-                    self.errors.append(f"Failed to import {model_label} (env_id={env_id}): {str(e)}")
-                    logger.exception(f"Failed to import {model_label} (env_id={env_id})")
+                    raise Exception(f"Failed to import {model_label} (env_id={env_id}): {str(e)}")
         return imported_objects
 
 
     def import_instance(self, data):
-        model_label = data['model']
+        model_label = data.get('model')
         model_class = apps.get_model(model_label)
-        fields = data['fields']
-        env_id = data['env_id']
+        fields = data.get('fields')
+        env_id = data.get('env_id')
         relations = data.get('relations', {})
         m2m = data.get('m2m', {})
 

@@ -22,8 +22,3 @@ class Command(BaseCommand):
         results = service.import_data(data)
 
         self.stdout.write(self.style.SUCCESS(f"Successfully imported {len(results)} objects."))
-        if service.errors:
-            self.stdout.write(self.style.ERROR(f"Encountered {len(service.errors)} errors:"))
-            for error in service.errors:
-                self.stdout.write(self.style.ERROR(f"• {str(error)}"))
-
