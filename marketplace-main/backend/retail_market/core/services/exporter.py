@@ -51,7 +51,7 @@ class ExporterService:
                 related_obj = getattr(instance, field.name, None)
                 if related_obj:
                     # Put just the ID in fields
-                    data['fields'][field.name] = getattr(related_obj, 'id', None)
+                    data['fields'][field.name] = getattr(related_obj, 'staging_id', None)
                     # Optionally serialize full relation if in depth
                     serialized = self.deep_serialize_instance(related_obj, depth, env, exported)
                     if isinstance(serialized, dict):
