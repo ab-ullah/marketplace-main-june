@@ -22,7 +22,7 @@ class ExporterService:
 
         data = {
             'model': instance._meta.label,
-            'env_id': getattr(instance, f'{env}_id', getattr(instance, 'id')),
+            'env_id': getattr(instance, 'id'),
             'fields': {},
             'relations': {},
             'm2m': {}
@@ -51,7 +51,7 @@ class ExporterService:
                 related_obj = getattr(instance, field.name, None)
                 if related_obj:
                     # Put just the ID in fields
-                    data['fields'][field.name] = getattr(related_obj, 'staging_id', None)
+                    data['fields'][field.name] = getattr(related_obj, 'id', None)
                     # Optionally serialize full relation if in depth
                     serialized = self.deep_serialize_instance(related_obj, depth, env, exported)
                     if isinstance(serialized, dict):

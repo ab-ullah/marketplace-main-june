@@ -2,11 +2,17 @@ from django.apps import apps
 from django.db import transaction
 from django.db.models.fields.related import ForeignKey, OneToOneField
 
+from api.companies.models import Company
+
 
 class ImportService:
     def __init__(self, env='staging'):
         self.env = env
         self.imported = {}  # Keep track of imported objects to avoid duplicates
+        self.model_names = [
+            'MultiTenantModel', 'AdminUser', 'Deal', 'EmploymentRecord','Position',
+            'TransactionalConsideration', 'ValuationConsideration', 'ParticipantProfile'
+            ]
 
     def import_data(self, data_list):
         imported_objects = []
@@ -36,7 +42,7 @@ class ImportService:
         
         resolved_fields = self.resolve_fields(model_class, fields, relations)
         # Remove 'id' if present in resolved fields to avoid conflicts and new object creation
-        resolved_fields.pop('id', None)
+        resolved_fields['staging_id'] = resolved_fields.pop('id')
         env_to_filter = {
             'production': 'staging_id',  # Note: Your original had production using staging_id
             'staging': 'production_id'   # and staging using production_id - keeping this logic
@@ -84,7 +90,12 @@ class ImportService:
                         resolved[field_name] = self.imported[cache_key]
                     else:
                         try:
-                            resolved[field_name] = fk_model.objects.get(staging_id=raw_id)
+                            company_staging_id = fields.get('company')
+                            if fk_model.__name__ != 'Company' and company_staging_id and fk_model.__name__ in self.model_names:
+                                company_id = Company.objects.get(staging_id = company_staging_id).id
+                                resolved[field_name] = fk_model.objects.get(staging_id=raw_id, company_id=company_id)
+                            else:
+                                resolved[field_name] = fk_model.objects.get(staging_id=raw_id)
                         except fk_model.DoesNotExist:
                             raise ValueError(f"Related instance {fk_model.__name__} with staging_id={raw_id} does not exist and was not imported yet")
             else:
