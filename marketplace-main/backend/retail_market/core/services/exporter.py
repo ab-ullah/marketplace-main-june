@@ -80,7 +80,7 @@ class ExporterService:
         response = list()
         depth = 1
         for obj in queryset:
-            serialized_data = self.deep_serialize_instance(obj,depth, env, exported)
+            serialized_data = self.deep_serialize_instance(obj, depth, env, exported)
             response.append(serialized_data)
         return response
 
