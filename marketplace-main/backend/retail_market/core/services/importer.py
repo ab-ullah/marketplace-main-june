@@ -129,6 +129,9 @@ class CompanyImportService:
 
     def import_instance(self, data):
         model_label = data.get('model')
+        if model_label == 'companies.Company':
+            return Company.objects.get(id=self.company_id)
+
         model_class = apps.get_model(model_label)
         fields = data.get('fields')
         env_id = data.get('env_id')

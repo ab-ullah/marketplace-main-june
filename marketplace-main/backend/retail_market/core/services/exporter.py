@@ -9,17 +9,9 @@ class ExporterService:
         self.max_depth = depth
 
 
-    def deep_serialize_instance(self, instance, depth, env='staging', exported=None):
+    def deep_serialize_instance(self, instance, depth, env='staging'):
         if depth > self.max_depth:
             return None
-
-        if exported is None:
-            exported = {}
-
-        key = f"{instance._meta.label}:{getattr(instance, 'id')}"
-        if key in exported:
-            return
-
         data = {
             'model': instance._meta.label,
             'env_id': getattr(instance, 'id'),
@@ -28,9 +20,7 @@ class ExporterService:
             'm2m': {}
         }
 
-        exported[key] = data  # Prevent recursion
         depth += 1
-
         for field in instance._meta.get_fields():
             # Handle M2M
             if field.is_relation and field.many_to_many:
@@ -39,7 +29,7 @@ class ExporterService:
                 else:
                     related_objects = getattr(instance, field.name).all()
                 serialized = [
-                    self.deep_serialize_instance(obj, depth, env, exported)
+                    self.deep_serialize_instance(obj, depth, env)
                     for obj in related_objects
                 ]
                 serialized = [obj for obj in serialized if isinstance(obj, dict)]
@@ -53,7 +43,7 @@ class ExporterService:
                     # Put just the ID in fields
                     data['fields'][field.name] = getattr(related_obj, 'id', None)
                     # Optionally serialize full relation if in depth
-                    serialized = self.deep_serialize_instance(related_obj, depth, env, exported)
+                    serialized = self.deep_serialize_instance(related_obj, depth, env)
                     if isinstance(serialized, dict):
                         data['relations'][field.name] = serialized
                 else:
@@ -76,11 +66,10 @@ class ExporterService:
         return data
 
     def export_queryset(self, queryset, env='staging'):
-        exported = dict()
         response = list()
         depth = 1
         for obj in queryset:
-            serialized_data = self.deep_serialize_instance(obj, depth, env, exported)
+            serialized_data = self.deep_serialize_instance(obj, depth, env)
             response.append(serialized_data)
         return response
 
