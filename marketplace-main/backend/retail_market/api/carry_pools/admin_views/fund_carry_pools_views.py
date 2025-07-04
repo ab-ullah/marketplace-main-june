@@ -493,6 +493,48 @@ class ForfeitureAPIView(AdminViewMixin, APIView, VestingDateViewMixin):
         return Response(allocations_response, status=status.HTTP_201_CREATED)
 
 
+class ForfeitureRetrieveUpdateDeleteAPIView(AdminViewMixin, APIView, VestingDateViewMixin):
+    """
+    Handles retrieve, partial update, and delete operations for a single forfeiture instance.
+    """
+
+    def get_forfeiture_action(self, allocation_id):
+        return AllocationAction.objects.filter(
+            company=self.company,
+            allocation_id=allocation_id,
+            type=AllocationAction.Type.FORFEIT.value,
+        ).order_by('-created_at').first()
+
+    def get(self, request, allocation_id):
+        forfeiture_action = self.get_forfeiture_action(allocation_id)
+        if not forfeiture_action:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = AllocationActionSerializer(forfeiture_action)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def patch(self, request, allocation_id):
+        forfeiture_action = self.get_forfeiture_action(allocation_id)
+        if not forfeiture_action:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = AllocationActionSerializer(forfeiture_action, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, allocation_id):
+        forfeiture_action = self.get_forfeiture_action(allocation_id)
+        if not forfeiture_action:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        forfeiture_action.deleted = True
+        forfeiture_action.save(update_fields=["deleted"])
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class ForfeiturePreviewAPIView(AdminViewMixin, APIView, VestingDateViewMixin):
 
     def post(self, request, user_id):

@@ -19,9 +19,9 @@ from api.carry_pools.admin_views.fund_carry_pools_views import (
     VestingScheduleDisplayView, VestingScheduleListCreateView, CarryFundParticipantsView,
     CarryDocumentsListCreateAPIView, CarryDocumentUpdateAPIView,
     CarryDocumentParticipantsListAPIView, GetCarryDocumentAdminSigningURLAPIView, StoreCarryDocumentAdminSignedResponse,
-    ParticipantCompensationHistory, CarryPlanFirmLevelView, ForfeitureAPIView, CarryPlanVestingSchedulesView,
-    CarryPlanMilestoneView, UserCarryDocumentsView, CarryParticipantCreateAPIView, CarryPlanPreviewDiluteView,
-    UserParticipantEmploymentRecordView,
+    ParticipantCompensationHistory, CarryPlanFirmLevelView, ForfeitureAPIView, ForfeitureRetrieveUpdateDeleteAPIView,
+    CarryPlanVestingSchedulesView, CarryPlanMilestoneView, UserCarryDocumentsView, CarryParticipantCreateAPIView,
+    CarryPlanPreviewDiluteView, UserParticipantEmploymentRecordView,
     CarryPlanExportAPIView, AllocationsExportAPIView,
     CarryPlanDiluteView, CarryPlanAllocationDetailAPIView, CarrySubPoolAPIView, ParticipantInvestmentsView,
     UserParticipantsAPIView, UserParticipantProfileView, CarryListAllUsersView, CarryDocumentParticipantsReleaseAPIView,
@@ -153,6 +153,11 @@ urlpatterns = [
     path(
         'forfeiture/<int:user_id>',
         ForfeitureAPIView.as_view(),
+        name='forfeiture'
+    ),
+    path(
+        'forfeiture/<str:allocation_id>',
+        ForfeitureRetrieveUpdateDeleteAPIView.as_view(),
         name='forfeiture'
     ),
     path(
