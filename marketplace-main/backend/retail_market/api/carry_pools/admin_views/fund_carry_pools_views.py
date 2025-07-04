@@ -493,46 +493,61 @@ class ForfeitureAPIView(AdminViewMixin, APIView, VestingDateViewMixin):
         return Response(allocations_response, status=status.HTTP_201_CREATED)
 
 
-class ForfeitureRetrieveUpdateDeleteAPIView(AdminViewMixin, APIView, VestingDateViewMixin):
-    """
-    Handles retrieve, partial update, and delete operations for a single forfeiture instance.
-    """
+class ForfeitureRetrieveAPIView(AdminViewMixin, APIView, VestingDateViewMixin):
+    """Retrieve the latest forfeiture action for a given allocation_id."""
 
-    def get_forfeiture_action(self, allocation_id):
-        return AllocationAction.objects.filter(
+    def get(self, request, allocation_id):
+        forfeiture_action = AllocationAction.objects.filter(
             company=self.company,
             allocation_id=allocation_id,
             type=AllocationAction.Type.FORFEIT.value,
         ).order_by('-created_at').first()
 
-    def get(self, request, allocation_id):
-        forfeiture_action = self.get_forfeiture_action(allocation_id)
         if not forfeiture_action:
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
-
         serializer = AllocationActionSerializer(forfeiture_action)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data)
 
-    def patch(self, request, allocation_id):
-        forfeiture_action = self.get_forfeiture_action(allocation_id)
+
+class ForfeitureUpdateDeleteAPIView(AdminViewMixin, APIView, VestingDateViewMixin):
+    """Update or delete a specific forfeiture action by primary key."""
+
+    def get_forfeiture_action(self, pk):
+        return AllocationAction.objects.get(id=pk, company=self.company)
+
+    def patch(self, request, pk):
+        forfeiture_action = self.get_forfeiture_action(pk)
         if not forfeiture_action:
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = AllocationActionSerializer(forfeiture_action, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, allocation_id):
-        forfeiture_action = self.get_forfeiture_action(allocation_id)
+    def delete(self, request, pk):
+        forfeiture_action = self.get_forfeiture_action(pk)
         if not forfeiture_action:
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
 
         forfeiture_action.deleted = True
         forfeiture_action.save(update_fields=["deleted"])
-
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ForfeitureListAPIView(AdminViewMixin, APIView):
+    """List all forfeiture actions for a given allocation_id."""
+
+    def get(self, request, allocation_id):
+        forfeitures = AllocationAction.objects.filter(
+            company=self.company,
+            allocation_id=allocation_id,
+            type=AllocationAction.Type.FORFEIT.value,
+        ).order_by('-created_at')
+
+        serializer = AllocationActionSerializer(forfeitures, many=True)
+        return Response(serializer.data)
 
 
 class ForfeiturePreviewAPIView(AdminViewMixin, APIView, VestingDateViewMixin):

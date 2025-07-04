@@ -19,10 +19,10 @@ from api.carry_pools.admin_views.fund_carry_pools_views import (
     VestingScheduleDisplayView, VestingScheduleListCreateView, CarryFundParticipantsView,
     CarryDocumentsListCreateAPIView, CarryDocumentUpdateAPIView,
     CarryDocumentParticipantsListAPIView, GetCarryDocumentAdminSigningURLAPIView, StoreCarryDocumentAdminSignedResponse,
-    ParticipantCompensationHistory, CarryPlanFirmLevelView, ForfeitureAPIView, ForfeitureRetrieveUpdateDeleteAPIView,
-    CarryPlanVestingSchedulesView, CarryPlanMilestoneView, UserCarryDocumentsView, CarryParticipantCreateAPIView,
-    CarryPlanPreviewDiluteView, UserParticipantEmploymentRecordView,
-    CarryPlanExportAPIView, AllocationsExportAPIView,
+    ParticipantCompensationHistory, CarryPlanFirmLevelView, ForfeitureAPIView, ForfeitureListAPIView,
+    ForfeitureRetrieveAPIView, ForfeitureUpdateDeleteAPIView, CarryPlanVestingSchedulesView, CarryPlanMilestoneView,
+    UserCarryDocumentsView, CarryParticipantCreateAPIView, CarryPlanPreviewDiluteView,
+    UserParticipantEmploymentRecordView, CarryPlanExportAPIView, AllocationsExportAPIView,
     CarryPlanDiluteView, CarryPlanAllocationDetailAPIView, CarrySubPoolAPIView, ParticipantInvestmentsView,
     UserParticipantsAPIView, UserParticipantProfileView, CarryListAllUsersView, CarryDocumentParticipantsReleaseAPIView,
     CarryDocumentParticipantsUpdateAPIView, SubPoolUpdateDeleteAPIView, SubPoolPointsMigrationsAPIView,
@@ -156,9 +156,20 @@ urlpatterns = [
         name='forfeiture'
     ),
     path(
-        'forfeiture/<str:allocation_id>',
-        ForfeitureRetrieveUpdateDeleteAPIView.as_view(),
-        name='forfeiture'
+        'forfeitures/by-allocation/<str:allocation_id>/',
+        ForfeitureRetrieveAPIView.as_view(),
+        name='forfeiture-retrieve-by-allocation'
+    ),
+
+    path(
+        'forfeitures/<int:pk>/',
+        ForfeitureUpdateDeleteAPIView.as_view(),
+        name='forfeiture-update-delete'
+    ),
+    path(
+        'forfeitures/<str:allocation_id>/list/',
+        ForfeitureListAPIView.as_view(),
+        name='forfeiture-list'
     ),
     path(
         'forfeiture/<int:user_id>/calculate',
