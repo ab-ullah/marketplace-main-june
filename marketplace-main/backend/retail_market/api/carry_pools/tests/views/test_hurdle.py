@@ -25,18 +25,19 @@ from core.base_tests import BaseTestCase
 
 class HurdleCalculationAPITestCase(BaseTestCase):
     def setUp(self):
-        self.create_user()
+        self.create_multi_user()
         self.client.force_authenticate(self.admin_user.user)
         self.create_fund(company=self.company)
         call_command('activate_company_feature_flag', f'{self.company.id}', 'carry_hurdle')
-        self.carry_participant = self.create_carry_participant()
+        self.carry_participant_1 = self.create_carry_participant(self.user_1)
+        self.carry_participant_2 = self.create_carry_participant(self.user_2)
         self.vesting_schedule = self.create_vesting_schedule()
         self.fund_carry_plan = self.create_fund_carry_plan_with_allocation()
-        self.allocations = self.get_allocations()
+        self.allocations = self.get_carry_plan_allocations()
 
-    def create_carry_participant(self):
+    def create_carry_participant(self, user):
         carry_participant = CarryParticipantFactory(company=self.company)
-        carry_participant.associate_with_user(self.user)
+        carry_participant.associate_with_user(user)
         return carry_participant
 
     def create_vesting_schedule(self):
@@ -71,8 +72,16 @@ class HurdleCalculationAPITestCase(BaseTestCase):
         payload = {
             "allocations": [
                 {
-                    "carry_participant_id": self.carry_participant.id,
+                    "carry_participant_id": self.carry_participant_1.id,
                     "bps": 50,
+                    "allocation_id": None,
+                    "grant_date": datetime.now(),
+                    "vesting_schedule": self.vesting_schedule.id,
+                    "vesting_start_date": datetime.now()
+                },
+                {
+                    "carry_participant_id": self.carry_participant_2.id,
+                    "bps": 25,
                     "allocation_id": None,
                     "grant_date": datetime.now(),
                     "vesting_schedule": self.vesting_schedule.id,
@@ -83,7 +92,7 @@ class HurdleCalculationAPITestCase(BaseTestCase):
         self.client.post(url, data=payload, format='json', **self.get_headers())
         return fund_carry_plan
 
-    def get_allocations(self):
+    def get_carry_plan_allocations(self):
         url = reverse('carry-plan-allocations', kwargs={'pk': self.fund_carry_plan.carry_plan.id})
         return self.client.get(url).data['allocations']
 
@@ -94,34 +103,39 @@ class HurdleCalculationAPITestCase(BaseTestCase):
             "applies_to": CarryHurdle.AppliesToType.ECV,
             "is_supercharged": False,
             "source_allocations": [self.allocations[0]['allocation_id']],
-            "impacted_allocations": [],
+            "impacted_allocations": [self.allocations[1]['allocation_id']],
             "hurdle_rate": hurdle_rate
         }
 
-    def post_hurdle_and_get_allocation(self, hurdle_rate):
+    def get_allocation(self, allocation_id):
+        alloc_url = reverse(
+            'carry-plan-single-allocation',
+            kwargs={
+                'pk': self.fund_carry_plan.carry_plan.id,
+                'allocation_id': allocation_id
+            }
+        )
+        return self.client.get(alloc_url, format="json", **self.get_headers()).data
+    def post_hurdle_and_get_allocations(self, hurdle_rate):
+        """Create a hurdle and fetch both source and impacted allocations."""
         url = reverse('carry-hurdle-create', kwargs={'pk': self.fund_carry_plan.carry_plan.id})
         payload = self.get_payload(hurdle_rate)
         response = self.client.post(url, data=payload, format="json", **self.get_headers())
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        allocation_url = reverse(
-            'carry-plan-single-allocation',
-            kwargs={
-                'pk': self.fund_carry_plan.carry_plan.id,
-                'allocation_id': payload['source_allocations'][0]
-            }
-        )
-        alloc_response = self.client.get(allocation_url, format="json", **self.get_headers())
-        self.assertEqual(alloc_response.status_code, status.HTTP_200_OK)
-        return alloc_response.data
+        source_data = self.get_allocation(payload['source_allocations'][0])
+        impacted_data = self.get_allocation(payload['impacted_allocations'][0])
+        return source_data, impacted_data
 
     def test_ecv_greater_than_hurdle_rate(self):
-        data = self.post_hurdle_and_get_allocation(hurdle_rate=3000)
-        self.assertEqual(Decimal(data["participant_ecv"]), Decimal(3500))
+        source_data, _ = self.post_hurdle_and_get_allocations(hurdle_rate=3000)
+        self.assertEqual(Decimal(source_data["participant_ecv"]), Decimal(3500))
 
     def test_ecv_less_than_hurdle_rate(self):
-        data = self.post_hurdle_and_get_allocation(hurdle_rate=12000)
-        self.assertEqual(Decimal(data["participant_ecv"]), Decimal(0))
+        source_data, impacted_data = self.post_hurdle_and_get_allocations(hurdle_rate=12000)
+        self.assertEqual(Decimal(source_data["participant_ecv"]), Decimal(0))
+        self.assertEqual(Decimal(impacted_data["participant_ecv"]), Decimal(7500))
+
 
 
 class CarryHurdleListCreateAPITestCase(BaseTestCase):
