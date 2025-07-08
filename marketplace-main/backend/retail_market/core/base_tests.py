@@ -54,6 +54,16 @@ class Migrator:
 
 class BaseTestCase(APITestCase):
 
+    def create_multi_user(self):
+        self.create_company()
+        self.create_countries()
+        self.create_blocks(company=self.company)
+        self.user_1 = UserFactory()
+        self.user_2 = UserFactory()
+        self.admin_user = AdminUserFactory(company=self.company)
+        self.company_user_1 = CompanyUserFactory(user=self.user_1, company=self.company)
+        self.company_user_2 = CompanyUserFactory(user=self.user_2, company=self.company)
+
     def create_user(self):
         self.create_company()
         self.create_countries()

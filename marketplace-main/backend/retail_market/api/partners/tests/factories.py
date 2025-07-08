@@ -59,7 +59,10 @@ class FundFactory(factory.django.DjangoModelFactory):
     target_fund_size = 10_000_000
     firm_co_investment_commitment = 500_000
     external_id = factory.Sequence(lambda n: 'xtrnl-id-{0}'.format(n))
-
+    estimated_value = 10_000
+    fair_market_value = 8_000
+    estimated_value_date = factory.LazyFunction(datetime.datetime.now)
+    fair_market_value_date = factory.LazyFunction(datetime.datetime.now)
 
 class FundTagFactory(factory.django.DjangoModelFactory):
     class Meta:
