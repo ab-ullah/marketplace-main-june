@@ -529,15 +529,17 @@ class ForfeitureUpdateDeleteAPIView(AdminViewMixin, APIView, VestingDateViewMixi
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
-        forfeiture_action = self.get_forfeiture_action(pk)
-        if not forfeiture_action:
-            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
         try:
+            forfeiture_action = self.get_forfeiture_action(pk)
+            if not forfeiture_action:
+                return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
             forfeited_service = ForfeitedService()
             if forfeited_service.delete_forfeiture_action(forfeiture_action):
                 return Response(status=status.HTTP_204_NO_CONTENT)
         except ValidationError as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except AllocationAction.DoesNotExist:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
 
 
 class ForfeitureListAPIView(AdminViewMixin, APIView):

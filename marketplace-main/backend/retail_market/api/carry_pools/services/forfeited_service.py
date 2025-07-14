@@ -8,6 +8,19 @@ from api.carry_pools.models import AllocationAction
 class ForfeitedService:
 
     def validate_forfeited_deletion(self, record_to_delete):
+        """
+        Validates if a forfeited allocation can be deleted without 
+        causing total BPS in the base pool to exceed 100.
+
+        Adds the BPS of the record back to the pool and checks 
+        if the total would stay within limit.
+
+        Raises:
+            ValidationError: If resulting BPS exceeds 100.
+
+        Returns:
+            bool: True if deletion is allowed.
+        """
         if record_to_delete.type != AllocationAction.Type.FORFEIT:
             return False
 
@@ -31,9 +44,7 @@ class ForfeitedService:
             net_bps = original_bps - forfeited_bps
             total_bps += net_bps
 
-        # 2. Add the bps of the record we are about to delete (it will be "re-added" to pool)
         total_bps += record_to_delete.bps
-
         if total_bps > 100:
             raise ValidationError(f"Cannot delete forfeited record: total BPS would exceed 100 ({total_bps})")
         return True
