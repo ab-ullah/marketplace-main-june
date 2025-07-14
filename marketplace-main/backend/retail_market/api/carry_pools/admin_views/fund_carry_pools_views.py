@@ -1,6 +1,7 @@
 import csv
 from decimal import Decimal
 
+from django.core.exceptions import ValidationError
 from django.db.models import Count, Subquery, Sum, Prefetch
 from django_pglocks import advisory_lock
 from django_q.tasks import async_task
@@ -76,6 +77,7 @@ from api.page_configs.services.company_page_config import CompanyPageConfigRetri
 from api.permissions.is_compensation_admin import IsCompensationAccessAdmin
 from api.permissions.is_sidecar_admin_permission import IsSidecarAdminUser
 from api.carry_pools.services.carry_signed_response import CarrySignedResponseService
+from api.carry_pools.services.forfeited_service import ForfeitedService
 from api.users.constants import CARRY_MANAGER
 from api.users.models import RetailUser
 from api.users.selectors.users_in_company_selector import get_users_in_company
@@ -530,10 +532,12 @@ class ForfeitureUpdateDeleteAPIView(AdminViewMixin, APIView, VestingDateViewMixi
         forfeiture_action = self.get_forfeiture_action(pk)
         if not forfeiture_action:
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
-
-        forfeiture_action.deleted = True
-        forfeiture_action.save(update_fields=["deleted"])
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        try:
+            forfeited_service = ForfeitedService()
+            if forfeited_service.delete_forfeiture_action(forfeiture_action):
+                return Response(status=status.HTTP_204_NO_CONTENT)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ForfeitureListAPIView(AdminViewMixin, APIView):
