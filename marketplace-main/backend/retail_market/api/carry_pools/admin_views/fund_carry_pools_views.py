@@ -1,6 +1,7 @@
 import csv
 from decimal import Decimal
 
+from django.core.exceptions import ValidationError
 from django.db.models import Count, Subquery, Sum, Prefetch
 from django_pglocks import advisory_lock
 from django_q.tasks import async_task
@@ -76,6 +77,7 @@ from api.page_configs.services.company_page_config import CompanyPageConfigRetri
 from api.permissions.is_compensation_admin import IsCompensationAccessAdmin
 from api.permissions.is_sidecar_admin_permission import IsSidecarAdminUser
 from api.carry_pools.services.carry_signed_response import CarrySignedResponseService
+from api.carry_pools.services.forfeited_service import ForfeitedService
 from api.users.constants import CARRY_MANAGER
 from api.users.models import RetailUser
 from api.users.selectors.users_in_company_selector import get_users_in_company
@@ -491,6 +493,75 @@ class ForfeitureAPIView(AdminViewMixin, APIView, VestingDateViewMixin):
         allocations = service.forfeit_allocations(forfeiture_data, allocations_response)
         allocations_response = service.get_user_data(allocations)
         return Response(allocations_response, status=status.HTTP_201_CREATED)
+
+
+class ForfeitureRetrieveAPIView(AdminViewMixin, APIView, VestingDateViewMixin):
+    """Retrieve the latest forfeiture action for a given allocation_id."""
+
+    def get(self, request, allocation_id):
+        forfeiture_action = AllocationAction.objects.filter(
+            company=self.company,
+            allocation_id=allocation_id,
+            type=AllocationAction.Type.FORFEIT.value,
+        ).order_by('-created_at').first()
+
+        if not forfeiture_action:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = AllocationActionSerializer(forfeiture_action)
+        return Response(serializer.data)
+
+
+class ForfeitureUpdateDeleteAPIView(AdminViewMixin, APIView, VestingDateViewMixin):
+    """Update or delete a specific forfeiture action by primary key."""
+
+    def get_forfeiture_action(self, pk):
+        return AllocationAction.objects.get(id=pk, company=self.company)
+
+    def patch(self, request, carry_plan_id, pk):
+        try:
+            forfeiture_action = self.get_forfeiture_action(pk)
+            if not forfeiture_action:
+                return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+            serializer = AllocationActionSerializer(forfeiture_action, data=request.data, partial=True)
+            if serializer.is_valid():
+                bps = serializer.validated_data["bps"]
+                forfeited_service = ForfeitedService()
+                if forfeited_service.update_forfeiture_action(forfeiture_action, bps, carry_plan_id, self.calculation_date):
+                    serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except AllocationAction.DoesNotExist:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    def delete(self, request, carry_plan_id, pk):
+        try:
+            forfeiture_action = self.get_forfeiture_action(pk)
+            if not forfeiture_action:
+                return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+            forfeited_service = ForfeitedService()
+            if forfeited_service.delete_forfeiture_action(forfeiture_action, carry_plan_id, self.calculation_date):
+                return Response(status=status.HTTP_204_NO_CONTENT)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except AllocationAction.DoesNotExist:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+
+class ForfeitureListAPIView(AdminViewMixin, APIView):
+    """List all forfeiture actions for a given allocation_id."""
+
+    def get(self, request, allocation_id):
+        forfeitures = AllocationAction.objects.filter(
+            company=self.company,
+            allocation_id=allocation_id,
+            type=AllocationAction.Type.FORFEIT.value,
+        ).order_by('-created_at')
+
+        serializer = AllocationActionSerializer(forfeitures, many=True)
+        return Response(serializer.data)
 
 
 class ForfeiturePreviewAPIView(AdminViewMixin, APIView, VestingDateViewMixin):
