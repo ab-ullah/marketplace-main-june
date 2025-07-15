@@ -162,7 +162,7 @@ urlpatterns = [
     ),
 
     path(
-        'forfeitures/<int:pk>/',
+        'forfeitures/<int:carry_plan_id>/<int:pk>/',
         ForfeitureUpdateDeleteAPIView.as_view(),
         name='forfeiture-update-delete'
     ),

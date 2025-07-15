@@ -517,24 +517,32 @@ class ForfeitureUpdateDeleteAPIView(AdminViewMixin, APIView, VestingDateViewMixi
     def get_forfeiture_action(self, pk):
         return AllocationAction.objects.get(id=pk, company=self.company)
 
-    def patch(self, request, pk):
-        forfeiture_action = self.get_forfeiture_action(pk)
-        if not forfeiture_action:
+    def patch(self, request, carry_plan_id, pk):
+        try:
+            forfeiture_action = self.get_forfeiture_action(pk)
+            if not forfeiture_action:
+                return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+            serializer = AllocationActionSerializer(forfeiture_action, data=request.data, partial=True)
+            if serializer.is_valid():
+                bps = serializer.validated_data["bps"]
+                forfeited_service = ForfeitedService()
+                if forfeited_service.update_forfeiture_action(forfeiture_action, bps, carry_plan_id, self.calculation_date):
+                    serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except AllocationAction.DoesNotExist:
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = AllocationActionSerializer(forfeiture_action, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, pk):
+    def delete(self, request, carry_plan_id, pk):
         try:
             forfeiture_action = self.get_forfeiture_action(pk)
             if not forfeiture_action:
                 return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
             forfeited_service = ForfeitedService()
-            if forfeited_service.delete_forfeiture_action(forfeiture_action):
+            if forfeited_service.delete_forfeiture_action(forfeiture_action, carry_plan_id, self.calculation_date):
                 return Response(status=status.HTTP_204_NO_CONTENT)
         except ValidationError as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)

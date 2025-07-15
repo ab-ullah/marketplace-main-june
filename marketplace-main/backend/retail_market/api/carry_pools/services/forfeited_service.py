@@ -3,55 +3,57 @@ from django.core.exceptions import ValidationError
 from django.db.models import Sum
 
 from api.carry_pools.models import AllocationAction
+from api.carry_pools.services.prepare_allocation_format import PrepareAllocationFormatService
 
 
 class ForfeitedService:
 
-    def validate_forfeited_deletion(self, record_to_delete):
+    def _validate_total_bps(self, current_bps, carry_plan_id, calculation_date):
         """
-        Validates if a forfeited allocation can be deleted without 
-        causing total BPS in the base pool to exceed 100.
-
-        Adds the BPS of the record back to the pool and checks 
-        if the total would stay within limit.
-
-        Raises:
-            ValidationError: If resulting BPS exceeds 100.
-
-        Returns:
-            bool: True if deletion is allowed.
+        Validates that the total BPS after including current_bps does not exceed 100.
         """
-        if record_to_delete.type != AllocationAction.Type.FORFEIT:
-            return False
+        result = PrepareAllocationFormatService(
+            carry_plan_id=carry_plan_id
+        ).get_formatted_data_for_allocations(calculation_date)
 
-        base_pool_id = record_to_delete.base_pool_id
-        related_records = AllocationAction.objects.filter(
-            base_pool_id=base_pool_id,
-            deleted=False
-        )
-        total_bps = Decimal('0')
-        for allocation in related_records.values_list('allocation_id', flat=True).distinct():
-            original_bps = related_records.filter(
-                allocation_id=allocation,
-                type=AllocationAction.Type.CREATE
-            ).aggregate(bps=Sum('bps'))['bps'] or Decimal('0')
-
-            forfeited_bps = related_records.filter(
-                allocation_id=allocation,
-                type=AllocationAction.Type.FORFEIT
-            ).aggregate(bps=Sum('bps'))['bps'] or Decimal('0')
-
-            net_bps = original_bps - forfeited_bps
-            total_bps += net_bps
-
-        total_bps += record_to_delete.bps
+        total_bps = Decimal(result['allocated']) + Decimal(current_bps)
         if total_bps > 100:
-            raise ValidationError(f"Cannot delete forfeited record: total BPS would exceed 100 ({total_bps})")
+            raise ValidationError(
+                f"Total BPS would exceed 100: {total_bps}"
+            )
         return True
 
-    def delete_forfeiture_action(self, record):
-        if not self.validate_forfeited_deletion(record):
+    def delete_forfeiture_action(self, record, carry_plan_id, calculation_date):
+        """
+        Deletes the forfeited record after validation.
+        """
+        if record.type != AllocationAction.Type.FORFEIT:
+            return False
+        if not self._validate_total_bps(record.bps, carry_plan_id, calculation_date):
             return False
         record.deleted = True
         record.save(update_fields=["deleted"])
         return True
+
+    def _validate_update_bps(self,record, new_bps, carry_plan_id, calculation_date):
+        """
+        Validates that the total BPS after including current_bps does not exceed 100.
+        """
+        result = PrepareAllocationFormatService(
+            carry_plan_id=carry_plan_id
+        ).get_formatted_data_for_allocations(calculation_date)
+
+        total_bps = Decimal(result['allocated']) + Decimal(record.bps) - Decimal(new_bps)
+        if total_bps > 100:
+            raise ValidationError(
+                f"Total BPS would exceed 100: {total_bps}"
+            )
+        return True
+
+    def update_forfeiture_action(self, record, bps, carry_plan_id, calculation_date):
+        """
+        Validates the update operation for a forfeited record.
+        """
+        if record.type != AllocationAction.Type.FORFEIT:
+            return False
+        return self._validate_update_bps(record, bps, carry_plan_id, calculation_date)
