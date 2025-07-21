@@ -399,6 +399,7 @@ class VestingSchedule(BaseModel):
         blank=True
     )
     custom_display = models.JSONField(null=True)
+    vesting_duration = models.CharField(max_length=20, null=True, blank=True)
 
     def __str__(self):
         return self.name
