@@ -1,3 +1,4 @@
+import re
 import uuid
 from datetime import date, datetime
 
@@ -91,12 +92,21 @@ class MilestoneBasedVestingScheduleSerializer(serializers.ModelSerializer):
 
 class VestingScheduleSerializer(serializers.ModelSerializer):
     cliff_duration = serializers.CharField()
+    vesting_duration = serializers.CharField(required=False, allow_blank=True)
     time_vesting_schedules = TimeBasedVestingScheduleSerializer(many=True, read_only=True)
     milestone_vesting_schedules = MilestoneBasedVestingScheduleSerializer(many=True, read_only=True)
 
     class Meta:
         model = VestingSchedule
         fields = '__all__'
+
+    def validate_vesting_duration(self, value):
+        if value:
+            if not re.match(r'^\d+\s(day|days|month|months|year|years)$', value.strip()):
+                raise serializers.ValidationError(
+                    "Enter duration like '1 month', '3 years', or '6 months'."
+                )
+        return value
 
     def create(self, validated_data):
         validated_data['company'] = self.context['company']

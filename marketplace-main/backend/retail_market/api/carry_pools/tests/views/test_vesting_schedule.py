@@ -327,3 +327,46 @@ class VestingScheduleViewTestCase(BaseTestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['milestone']['id'], milestone.id)
+
+    def test_create_vesting_schedule_vesting_duration(self):
+        request_data = {
+            "name": "Hybrid Vesting Schedule",
+            "description": "80% vesting over 4 years, vests annual with a 1 year cliff, then event based vesting for "
+                           "final 20%",
+            "vesting_type": 3,
+            "is_default": False,
+            "cliff_duration": "P1Y",
+            "cliff_vesting_percentage": 20,
+            "time_vesting_schedules": [
+                {
+                    "period_duration": "P1Y",
+                    "period_vesting_percentage": 60,
+                    "periodically": True,
+                    "period_count": 3
+                }
+            ],
+            "milestone_vesting_schedules": [
+                {
+                    "name": "Deal Date",
+                    "type": "Deal Date",
+                    "milestone_vesting_percentage": 20
+                }
+            ]
+        }
+        url = reverse('vesting-schedule-list-create')
+        error_msg = "Enter duration like '1 month', '3 years', or '6 months'."
+
+        # Invalid scenarios
+        invalid_durations = ['5years', '5     years', 'Five years', '2.5 years', '5 years vesting']
+        for duration in invalid_durations:
+            request_data['vesting_duration'] = duration
+            response = self.client.post(url, data=request_data, format='json')
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertEqual(response.data['vesting_duration'][0], error_msg)
+
+        # Valid scenario
+        valid_durations = ['1 year', '6 months', '365 days', '5 years']
+        for duration in valid_durations:
+            request_data['vesting_duration'] = duration
+            response = self.client.post(url, data=request_data, format='json')
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
