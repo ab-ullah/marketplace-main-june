@@ -86,23 +86,42 @@ class CarryPlan(BaseModel):
         return adjustments_by_allocations
 
     def get_adjustments_by_allocations(self, calculation_date=None):
-        filters = {'carry_plan': self}
+        adjustments = AllocationValueAdjustment.objects.filter(
+            carry_plan=self
+        )
+        if calculation_date:
+            adjustments = adjustments.filter(effective_date__lte=calculation_date)
+
+        adjustments = adjustments.values('allocation_id', 'value_type').annotate(net_adjustment=Sum('adjustment'))
+        adjustment_map = {}
+        for adjustment in adjustments:
+            allocation_id = adjustment['allocation_id']
+            value_type = adjustment['value_type']
+            net_adjustment = adjustment['net_adjustment']
+            if allocation_id not in adjustment_map:
+                adjustment_map[allocation_id] = {}
+            if value_type not in adjustment_map[allocation_id]:
+                adjustment_map[allocation_id][value_type] = 0
+            adjustment_map[allocation_id][value_type] += net_adjustment
+        return adjustment_map
+
+    @staticmethod
+    def get_carry_plan_adjustments_by_allocations(carry_plan_ids, calculation_date):
+        filters = {'carry_plan_id__in': carry_plan_ids}
         if calculation_date:
             filters['effective_date__lte'] = calculation_date
 
         adjustments = (
             AllocationValueAdjustment.objects
             .filter(**filters)
-            .values('allocation_id', 'value_type')
+            .values('carry_plan_id', 'allocation_id', 'value_type')
             .annotate(net_adjustment=Sum('adjustment'))
         )
-
-        adjustment_map = defaultdict(lambda: defaultdict(int))
+        adjustment_map = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
         for adj in adjustments:
-            adjustment_map[adj['allocation_id']][adj['value_type']] += adj['net_adjustment']
+            adjustment_map[adj['carry_plan_id']][adj['allocation_id']][adj['value_type']] += adj['net_adjustment']
 
         return adjustment_map
-
     @property
     def carry_estimated_value(self):
         total_value = 0

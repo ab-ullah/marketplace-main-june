@@ -915,14 +915,16 @@ def prepare_estimated_carry_value_for_users(users, company_id, calculation_date)
     get_forfeit_dilute_transferred_adjusted_allocations(allocations, calculation_date)
     bulk_estimated_values = CarryPlan.get_bulk_carry_estimated_values(carry_plan_ids)
 
+    carry_plan_ids = {int(allocation['carry_pool'].carry_plan_id) for allocation in allocations\
+                      if str(allocation['carry_pool'].carry_plan_id).isdigit()}
+    carry_plan_ids = list(carry_plan_ids)
+    adjustment_map = CarryPlan.get_carry_plan_adjustments_by_allocations(carry_plan_ids, calculation_date)
 
     for allocation in allocations:
         carry_pool = allocation['carry_pool']
         carry_plan = carry_pool.carry_plan
         carry_plan_estimated_value = bulk_estimated_values.get(carry_plan.id, 0)
-        value_adjustments = carry_plan.get_adjustments_by_allocations(
-            calculation_date=calculation_date
-        )
+        value_adjustments = adjustment_map.get(carry_plan.id, {}).get(allocation['allocation_id'], {})
         estimated_values = EstimatedValuesService(
             {
                 'allocation': allocation,
