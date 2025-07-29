@@ -1,4 +1,5 @@
 from collections import defaultdict
+from functools import cached_property
 
 import encrypted_fields.fields
 from fractions import Fraction
@@ -9,6 +10,7 @@ from django.db.models import Sum
 from django.utils.translation import gettext_lazy as _
 from simple_history.models import HistoricalRecords
 
+from api.carry_pools.constants import CARRY_HURDLE_FEATURE
 from api.carry_pools.managers import CarryPoolManager, ParticipantCarryDocumentManager
 
 from api.companies.models import CompanyUser
@@ -103,6 +105,23 @@ class CarryPlan(BaseModel):
             adjustment_map[allocation_id][value_type] += net_adjustment
         return adjustment_map
 
+    @staticmethod
+    def get_carry_plan_adjustments_by_allocations(carry_plan_ids, calculation_date):
+        filters = {'carry_plan_id__in': carry_plan_ids}
+        if calculation_date:
+            filters['effective_date__lte'] = calculation_date
+
+        adjustments = (
+            AllocationValueAdjustment.objects
+            .filter(**filters)
+            .values('carry_plan_id', 'allocation_id', 'value_type')
+            .annotate(net_adjustment=Sum('adjustment'))
+        )
+        adjustment_map = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
+        for adj in adjustments:
+            adjustment_map[adj['carry_plan_id']][adj['allocation_id']][adj['value_type']] += adj['net_adjustment']
+
+        return adjustment_map
     @property
     def carry_estimated_value(self):
         total_value = 0
@@ -261,6 +280,10 @@ class CarryPlan(BaseModel):
         elif hasattr(self, 'investment_tranche_realization'):
             return self.investment_tranche_realization.investment_tranche.name
         return ""
+
+    @cached_property
+    def is_carry_hurdle_feature_active(self):
+        return self.company.is_feature_flag_active(CARRY_HURDLE_FEATURE)
 
 
 class CarryPool(BaseModel):

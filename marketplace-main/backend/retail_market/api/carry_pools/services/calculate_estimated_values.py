@@ -465,14 +465,11 @@ class EstimatedValuesService:
 
         return carry_value, fair_market_value
 
-    def hurdle_feature_active(self):
-        return self.carry_plan.company.is_feature_flag_active(CARRY_HURDLE_FEATURE)
-
     def calculate(self):
         total_estimated_value = self.carry_plan_estimated_value
         total_fair_market_value = self.carry_plan_fair_market_value
 
-        if self.hurdle_feature_active():
+        if self.carry_plan.is_carry_hurdle_feature_active:
             self.check_hurdle()
 
         carry_estimated_value = self.calculate_value(

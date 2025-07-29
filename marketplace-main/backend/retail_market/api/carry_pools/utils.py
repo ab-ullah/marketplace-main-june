@@ -416,36 +416,36 @@ def annotate_deal_qs(qs):
 def get_forfeit_dilute_transferred_adjusted_allocations(allocations, calculation_date):
     allocation_ids = [allocation['allocation_id'] for allocation in allocations]
 
-    # include forfeited bps (we need it separately for FE)
-    forfeited_actions = AllocationAction.objects.filter(
+    actions = AllocationAction.objects.filter(
         allocation_id__in=allocation_ids,
-        type=AllocationAction.Type.FORFEIT.value,
+        type__in=[
+            AllocationAction.Type.FORFEIT.value,
+            AllocationAction.Type.DILUTE.value,
+            AllocationAction.Type.TRANSFER_FROM.value,
+            AllocationAction.Type.TRANSFER_TO.value,
+        ],
         grant_date__date__lte=calculation_date
-    ).values('allocation_id').annotate(forfeited_bps=Sum('bps'))
+    ).values('allocation_id', 'type').annotate(total_bps=Sum('bps'))
 
-    forfeited_bps_map = {action['allocation_id']: action['forfeited_bps'] or 0 for action in forfeited_actions}
+    forfeited_bps_map = defaultdict(int)
+    diluted_bps_map = defaultdict(int)
+    transferred_from_bps_map = defaultdict(int)
+    transferred_to_bps_map = defaultdict(int)
 
-    # include diluted bps (we need it separately for FE)
-    dilute_actions = AllocationAction.objects.filter(
-        allocation_id__in=allocation_ids,
-        type=AllocationAction.Type.DILUTE.value,
-        grant_date__date__lte=calculation_date
-    ).values('allocation_id').annotate(diluted_bps=Sum('bps'))
-    diluted_bps_map = {action['allocation_id']: action['diluted_bps'] or 0 for action in dilute_actions}
+    for action in actions:
+        allocation_id = action['allocation_id']
+        bps = action['total_bps'] or 0
+        action_type = action['type']
 
-    transfer_from_actions = AllocationAction.objects.filter(
-        allocation_id__in=allocation_ids,
-        type=AllocationAction.Type.TRANSFER_FROM.value,
-        grant_date__date__lte=calculation_date
-    ).values('allocation_id').annotate(transferred_bps=Sum('bps'))
-    transferred_from_bps_map = {action['allocation_id']: action['transferred_bps'] or 0 for action in transfer_from_actions}
+        if action_type == AllocationAction.Type.FORFEIT.value:
+            forfeited_bps_map[allocation_id] += bps
+        elif action_type == AllocationAction.Type.DILUTE.value:
+            diluted_bps_map[allocation_id] += bps
+        elif action_type == AllocationAction.Type.TRANSFER_FROM.value:
+            transferred_from_bps_map[allocation_id] += bps
+        elif action_type == AllocationAction.Type.TRANSFER_TO.value:
+            transferred_to_bps_map[allocation_id] += bps
 
-    transfer_to_actions = AllocationAction.objects.filter(
-        allocation_id__in=allocation_ids,
-        type=AllocationAction.Type.TRANSFER_TO.value,
-        grant_date__date__lte=calculation_date
-    ).values('allocation_id').annotate(transferred_to_bps=Sum('bps'))
-    transferred_to_bps_map = {action['allocation_id']: action['transferred_to_bps'] or 0 for action in transfer_to_actions}
 
     for allocation in allocations:
         allocation_id = allocation['allocation_id']
@@ -870,8 +870,11 @@ def prepare_estimated_carry_value_for_users(users, company_id, calculation_date)
     """
     from api.carry_pools.services.calculate_estimated_values import EstimatedValuesService
 
-    user_participants = CarryParticipantUser.objects.filter(user__in=users)
-    carry_participant_ids = [user_participant.carry_participant_id for user_participant in user_participants]
+    user_participants = CarryParticipantUser.objects.filter(user__in=users).values_list(
+        'user_id', 'carry_participant_id'
+    )
+    carry_participant_ids = [carry_participant_id for _, carry_participant_id in user_participants]
+
 
     participant_estimated_values = {}
     allocations = []
@@ -884,18 +887,15 @@ def prepare_estimated_carry_value_for_users(users, company_id, calculation_date)
     ).values('id', 'base_pool_id', 'allocation_id', 'carry_participant_id').distinct()
 
     base_pool_ids = [action['base_pool_id'] for action in allocation_actions]
-    latest_pools = (
-        CarryPool.objects.filter(
-            external_id__in=base_pool_ids,
-            company_id=company_id
-        )
-        .values('external_id')
-        .annotate(latest_created_at=Max('created_at'))
-    )
+    latest_created_at_subquery = CarryPool.objects.filter(
+        external_id=OuterRef('external_id'),
+        company_id=company_id
+    ).order_by('-created_at').values('created_at')[:1]
+
     latest_carry_pools = CarryPool.objects.filter(
         external_id__in=base_pool_ids,
         company_id=company_id,
-        created_at__in=[pool['latest_created_at'] for pool in latest_pools]
+        created_at=Subquery(latest_created_at_subquery)
     ).select_related('carry_plan')
     carry_pool_dict = {
         pool.external_id: pool
@@ -915,14 +915,16 @@ def prepare_estimated_carry_value_for_users(users, company_id, calculation_date)
     get_forfeit_dilute_transferred_adjusted_allocations(allocations, calculation_date)
     bulk_estimated_values = CarryPlan.get_bulk_carry_estimated_values(carry_plan_ids)
 
+    carry_plan_ids = {int(allocation['carry_pool'].carry_plan_id) for allocation in allocations\
+                      if str(allocation['carry_pool'].carry_plan_id).isdigit()}
+    carry_plan_ids = list(carry_plan_ids)
+    adjustment_map = CarryPlan.get_carry_plan_adjustments_by_allocations(carry_plan_ids, calculation_date)
 
     for allocation in allocations:
         carry_pool = allocation['carry_pool']
         carry_plan = carry_pool.carry_plan
         carry_plan_estimated_value = bulk_estimated_values.get(carry_plan.id, 0)
-        value_adjustments = carry_plan.get_adjustments_by_allocations(
-            calculation_date=calculation_date
-        )
+        value_adjustments = adjustment_map.get(carry_plan.id, {}).get(allocation['allocation_id'], {})
         estimated_values = EstimatedValuesService(
             {
                 'allocation': allocation,
@@ -942,9 +944,9 @@ def prepare_estimated_carry_value_for_users(users, company_id, calculation_date)
         else:
             participant_estimated_values[allocation['carry_participant_id']] = participant_estimated_carry
 
-    for participant in user_participants:
-        data[participant.user_id][participant.carry_participant_id] = participant_estimated_values.get(
-            participant.carry_participant_id, Decimal(0))
+    for user_id, carry_participant_id in user_participants:
+        data[user_id][carry_participant_id] = participant_estimated_values.get(
+            carry_participant_id, Decimal(0))
 
     return data
 
